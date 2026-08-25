@@ -3,11 +3,14 @@ package com.fichadigital.cliente;
 import com.fichadigital.security.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -41,19 +44,24 @@ public class ClienteController {
     }
 
     /**
-     * GET /clientes?busca={termo}
-     * Busca clientes por nome (parcial), telefone ou CPF — US04.
+     * GET /clientes?busca={termo}&page=0&size=20
+     * Busca paginada de clientes por nome (parcial), telefone ou CPF — US04 (Problema 2 — Performance).
      * CPF mascarado no resultado — RNF04.
      * farmaciaId do JWT — nunca do body (RNF03).
      *
      * @param busca Termo de busca (nome parcial, telefone ou CPF)
-     * @return Lista de ClienteResumo com CPF mascarado.
+     * @param page  Número da página (0-indexed, padrão: 0)
+     * @param size  Tamanho da página (padrão: 20, máximo recomendado: 100)
+     * @return Página de ClienteResumo com CPF mascarado.
      */
     @GetMapping
-    public ResponseEntity<List<ClienteResumo>> buscar(
-            @RequestParam(required = false, defaultValue = "") String busca) {
+    public ResponseEntity<Page<ClienteResumo>> buscar(
+            @RequestParam(required = false, defaultValue = "") String busca,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         UUID farmaciaId = SecurityUtils.farmaciaId(); // RNF03
-        return ResponseEntity.ok(clienteService.buscar(farmaciaId, busca));
+        Pageable pageable = PageRequest.of(page, Math.min(size, 100), Sort.by("nome").ascending());
+        return ResponseEntity.ok(clienteService.buscar(farmaciaId, busca, pageable));
     }
 
     /**

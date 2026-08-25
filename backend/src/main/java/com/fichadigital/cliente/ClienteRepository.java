@@ -1,13 +1,12 @@
 package com.fichadigital.cliente;
 
-import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,8 +26,8 @@ public interface ClienteRepository extends JpaRepository<Cliente, UUID> {
     boolean existsByIdAndFarmaciaId(UUID id, UUID farmaciaId);
 
     /**
-     * Busca por nome (parcial, case-insensitive), telefone ou CPF — US04.
-     * Filtrada por farmaciaId — RNF03.
+     * Busca paginada por nome (parcial, case-insensitive), telefone ou CPF — US04 (Problema 2 — Performance).
+     * Filtrada por farmaciaId — RNF03. Ordenação e limitação feitas pelo banco via Pageable.
      */
     @Query("""
             SELECT c FROM Cliente c
@@ -38,19 +37,12 @@ public interface ClienteRepository extends JpaRepository<Cliente, UUID> {
                  OR c.telefone LIKE CONCAT('%', :termo, '%')
                  OR c.cpf LIKE CONCAT('%', :termo, '%')
               )
-            ORDER BY c.nome ASC
             """)
-    List<Cliente> buscar(@Param("farmaciaId") UUID farmaciaId, @Param("termo") String termo);
-
-    /**
-     * Carrega o cliente com SELECT ... FOR UPDATE para atualização transacional do saldo (RNF10).
-     */
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT c FROM Cliente c WHERE c.id = :id")
-    Optional<Cliente> findByIdForUpdate(@Param("id") UUID id);
+    Page<Cliente> buscar(@Param("farmaciaId") UUID farmaciaId, @Param("termo") String termo, Pageable pageable);
 
     /**
      * Detalhe do cliente filtrado por farmácia (RNF03).
+     * Usado também nas escritas de saldo — o Optimistic Lock (@Version) garante atomicidade sem bloquear o banco.
      */
     @Query("SELECT c FROM Cliente c WHERE c.id = :id AND c.farmacia.id = :farmaciaId")
     Optional<Cliente> findByIdAndFarmaciaId(@Param("id") UUID id, @Param("farmaciaId") UUID farmaciaId);

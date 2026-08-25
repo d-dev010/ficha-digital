@@ -4,11 +4,13 @@ import com.fichadigital.farmacia.Farmacia;
 import com.fichadigital.farmacia.FarmaciaRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 /**
  * Service de clientes.
@@ -21,6 +23,9 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class ClienteService {
+
+    /** Regex pré-compilada para remover caracteres não-numéricos do CPF (Problema 4 — Performance). */
+    private static final Pattern NON_DIGIT = Pattern.compile("\\D");
 
     private final ClienteRepository clienteRepository;
     private final FarmaciaRepository farmaciaRepository;
@@ -47,19 +52,18 @@ public class ClienteService {
     }
 
     /**
-     * Busca clientes por nome (parcial), telefone ou CPF — US04.
-     * CPF mascarado no resultado (RNF04).
+     * Busca paginada de clientes por nome (parcial), telefone ou CPF — US04 (Problema 2 — Performance).
+     * CPF mascarado no resultado (RNF04). Ordenação definida pelo Pageable (ex: nome ASC).
      *
      * @param farmaciaId UUID da farmácia — extraído do JWT (RNF03)
      * @param termo      Termo de busca
-     * @return Lista de ClienteResumo com CPF mascarado
+     * @param pageable   Configuração de página e ordenação
+     * @return Página de ClienteResumo com CPF mascarado
      */
     @Transactional(readOnly = true)
-    public List<ClienteResumo> buscar(UUID farmaciaId, String termo) {
-        return clienteRepository.buscar(farmaciaId, termo)
-                .stream()
-                .map(c -> ClienteResumo.from(c, mascarar(c.getCpf())))
-                .toList();
+    public Page<ClienteResumo> buscar(UUID farmaciaId, String termo, Pageable pageable) {
+        return clienteRepository.buscar(farmaciaId, termo, pageable)
+                .map(c -> ClienteResumo.from(c, mascarar(c.getCpf())));
     }
 
     /**
@@ -82,8 +86,8 @@ public class ClienteService {
      */
     static String mascarar(String cpf) {
         if (cpf == null || cpf.isBlank()) return null;
-        // Remove formatação para normalizar
-        String digits = cpf.replaceAll("\\D", "");
+        // Remove formatação para normalizar — usa Pattern pré-compilado (evita recompilação por chamada)
+        String digits = NON_DIGIT.matcher(cpf).replaceAll("");
         if (digits.length() != 11) return "***.***.***-**";
         return digits.substring(0, 3) + ".***.***-" + digits.substring(9);
     }

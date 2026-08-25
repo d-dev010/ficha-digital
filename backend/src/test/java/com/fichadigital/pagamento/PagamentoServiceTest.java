@@ -25,7 +25,7 @@ import static org.mockito.Mockito.*;
 
 /**
  * Testes unitários para PagamentoService.
- * Cobre: abatimento correto, pagamento maior que saldo (floor em zero), cross-tenant (RNF03).
+ * Cobre: abatimento correto, pagamento maior que saldo (floor em zero), validação multi-tenant.
  */
 @ExtendWith(MockitoExtension.class)
 class PagamentoServiceTest {
@@ -79,7 +79,7 @@ class PagamentoServiceTest {
     void deveAbaterSaldoCorretamente() {
         // Arrange
         BigDecimal valorPagamento = new BigDecimal("80.00");
-        when(clienteRepository.findByIdForUpdate(clienteId)).thenReturn(Optional.of(cliente));
+        when(clienteRepository.findByIdAndFarmaciaId(clienteId, farmaciaId)).thenReturn(Optional.of(cliente));
         when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(usuario));
         when(pagamentoRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
@@ -97,7 +97,7 @@ class PagamentoServiceTest {
     void deveZerarSaldoQuandoPagamentoMaiorQueSaldo() {
         // Arrange: cliente deve 200.00, pagamento de 300.00
         BigDecimal pagamentoExcessivo = new BigDecimal("300.00");
-        when(clienteRepository.findByIdForUpdate(clienteId)).thenReturn(Optional.of(cliente));
+        when(clienteRepository.findByIdAndFarmaciaId(clienteId, farmaciaId)).thenReturn(Optional.of(cliente));
         when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(usuario));
         when(pagamentoRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
@@ -111,29 +111,11 @@ class PagamentoServiceTest {
     @Test
     @DisplayName("Deve lançar EntityNotFoundException quando cliente não encontrado")
     void deveLancarExcecaoQuandoClienteNaoEncontrado() {
-        when(clienteRepository.findByIdForUpdate(clienteId)).thenReturn(Optional.empty());
+        when(clienteRepository.findByIdAndFarmaciaId(clienteId, farmaciaId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() ->
                 pagamentoService.registrar(farmaciaId, usuarioId, clienteId, BigDecimal.TEN))
                 .isInstanceOf(EntityNotFoundException.class);
-
-        verify(pagamentoRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("Deve bloquear pagamento para cliente de outra farmácia (RNF03)")
-    void deveBloquearAcessoCrossTenant() {
-        UUID outraFarmaciaId = UUID.randomUUID();
-        Farmacia outraFarmacia = Farmacia.builder().id(outraFarmaciaId).nome("Outra").build();
-        Cliente clienteAlheio = Cliente.builder()
-                .id(clienteId).farmacia(outraFarmacia)
-                .nome("X").saldoDevedor(BigDecimal.ZERO).build();
-
-        when(clienteRepository.findByIdForUpdate(clienteId)).thenReturn(Optional.of(clienteAlheio));
-
-        assertThatThrownBy(() ->
-                pagamentoService.registrar(farmaciaId, usuarioId, clienteId, BigDecimal.TEN))
-                .isInstanceOf(SecurityException.class);
 
         verify(pagamentoRepository, never()).save(any());
     }

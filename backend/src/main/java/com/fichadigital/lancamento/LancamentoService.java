@@ -6,6 +6,8 @@ import com.fichadigital.usuario.Usuario;
 import com.fichadigital.usuario.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,14 +19,19 @@ import java.util.UUID;
  *
  * Regra crítica (RNF10 + RNF03):
  *  - O saldo_devedor é atualizado atomicamente dentro de @Transactional
- *  - O cliente é carregado com SELECT ... FOR UPDATE (lock pessimista) para evitar race condition
- *    em lançamentos simultâneos do mesmo cliente
+ *  - Optimistic Locking via @Version na entidade Cliente (Problema 3 — Performance):
+ *    substitui o lock pessimista (SELECT FOR UPDATE), eliminando o bloqueio de linha no banco.
+ *    Em caso de escrita concorrente, ObjectOptimisticLockingFailureException é capturada
+ *    e a operação é repetida até MAX_RETRIES vezes.
  *  - farmaciaId sempre vem do JWT/SecurityContext — NUNCA do body (RNF03)
  *  - A validação de que o cliente pertence à farmácia do usuário autenticado é OBRIGATÓRIA (RNF03)
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class LancamentoService {
+
+    private static final int MAX_RETRIES = 3;
 
     private final LancamentoRepository lancamentoRepository;
     private final ClienteRepository clienteRepository;
@@ -34,8 +41,10 @@ public class LancamentoService {
      * Lança um fiado para o cliente (US05).
      *
      * Confirmo entendimento do RNF03: farmaciaId é extraído do Authentication no controller
-     * e passado para este service. A query findByIdForUpdate verifica que o cliente pertence
+     * e passado para este service. A query findByIdAndFarmaciaId verifica que o cliente pertence
      * à mesma farmácia ANTES de qualquer escrita.
+     *
+     * Usa retry para lidar com ObjectOptimisticLockingFailureException (Problema 3).
      *
      * @param farmaciaId UUID da farmácia — extraído do JWT (RNF03)
      * @param usuarioId  UUID do usuário autenticado — do SecurityContext
@@ -44,17 +53,31 @@ public class LancamentoService {
      * @param descricao  Descrição livre
      * @return Lancamento persistido
      */
-    @Transactional
     public Lancamento lancar(UUID farmaciaId, UUID usuarioId, UUID clienteId,
                              BigDecimal valor, String descricao) {
-        // Validação multi-tenant + lock pessimista (RNF03 + RNF10)
-        Cliente cliente = clienteRepository.findByIdForUpdate(clienteId)
-                .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado: " + clienteId));
-
-        // RNF03: garante que o cliente pertence à farmácia do usuário autenticado
-        if (!cliente.getFarmacia().getId().equals(farmaciaId)) {
-            throw new SecurityException("Acesso negado: cliente não pertence à farmácia do usuário autenticado");
+        int tentativas = 0;
+        while (true) {
+            try {
+                return tentarLancar(farmaciaId, usuarioId, clienteId, valor, descricao);
+            } catch (ObjectOptimisticLockingFailureException e) {
+                tentativas++;
+                if (tentativas >= MAX_RETRIES) {
+                    log.error("Falha ao lançar fiado após {} tentativas por conflito de concorrência (clienteId={})",
+                            MAX_RETRIES, clienteId);
+                    throw e;
+                }
+                log.warn("Conflito de escrita concorrente ao lançar fiado (tentativa {}/{}), reexecutando...",
+                        tentativas, MAX_RETRIES);
+            }
         }
+    }
+
+    @Transactional
+    private Lancamento tentarLancar(UUID farmaciaId, UUID usuarioId, UUID clienteId,
+                                    BigDecimal valor, String descricao) {
+        // Validação multi-tenant com Optimistic Lock via @Version (RNF03 + RNF10)
+        Cliente cliente = clienteRepository.findByIdAndFarmaciaId(clienteId, farmaciaId)
+                .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado: " + clienteId));
 
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
@@ -67,6 +90,7 @@ public class LancamentoService {
                 .build();
 
         // Atualização atômica do saldo dentro da mesma transação (RNF10)
+        // O @Version na entidade Cliente detecta colisões e lança ObjectOptimisticLockingFailureException
         cliente.setSaldoDevedor(cliente.getSaldoDevedor().add(valor));
         clienteRepository.save(cliente);
 

@@ -69,6 +69,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         UUID usuarioId = jwtService.extrairUsuarioId(token);
 
         usuarioRepository.findById(usuarioId).ifPresent(usuario -> {
+            // Problema 5 — Segurança: recusa autenticação se o usuário foi desativado.
+            // Isso revoga sessões instantaneamente mesmo que o JWT ainda não tenha expirado.
+            if (!usuario.isEnabled()) {
+                log.warn("Tentativa de acesso com token válido por usuário desativado (id={})", usuarioId);
+                return;
+            }
             UserDetails userDetails = usuario;
             UsernamePasswordAuthenticationToken authToken =
                     new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

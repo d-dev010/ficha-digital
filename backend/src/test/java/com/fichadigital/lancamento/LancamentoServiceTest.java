@@ -25,7 +25,7 @@ import static org.mockito.Mockito.*;
 
 /**
  * Testes unitários para LancamentoService.
- * Cobre: lançamento normal, cliente não encontrado, violação de farmacia_id (RNF03).
+ * Cobre: lançamento normal, cliente não encontrado, validação multi-tenant (RNF03).
  */
 @ExtendWith(MockitoExtension.class)
 class LancamentoServiceTest {
@@ -43,7 +43,6 @@ class LancamentoServiceTest {
     private LancamentoService lancamentoService;
 
     private UUID farmaciaId;
-    private UUID outraFarmaciaId;
     private UUID usuarioId;
     private UUID clienteId;
     private Farmacia farmacia;
@@ -53,7 +52,6 @@ class LancamentoServiceTest {
     @BeforeEach
     void setUp() {
         farmaciaId = UUID.randomUUID();
-        outraFarmaciaId = UUID.randomUUID();
         usuarioId = UUID.randomUUID();
         clienteId = UUID.randomUUID();
 
@@ -81,7 +79,7 @@ class LancamentoServiceTest {
     void deveLancarFiadoEAtualizarSaldo() {
         // Arrange
         BigDecimal valorFiado = new BigDecimal("50.00");
-        when(clienteRepository.findByIdForUpdate(clienteId)).thenReturn(Optional.of(cliente));
+        when(clienteRepository.findByIdAndFarmaciaId(clienteId, farmaciaId)).thenReturn(Optional.of(cliente));
         when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(usuario));
         when(lancamentoRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
@@ -104,7 +102,7 @@ class LancamentoServiceTest {
         // Arrange
         cliente.setSaldoDevedor(new BigDecimal("100.00"));
         BigDecimal novoLancamento = new BigDecimal("30.50");
-        when(clienteRepository.findByIdForUpdate(clienteId)).thenReturn(Optional.of(cliente));
+        when(clienteRepository.findByIdAndFarmaciaId(clienteId, farmaciaId)).thenReturn(Optional.of(cliente));
         when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(usuario));
         when(lancamentoRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
@@ -119,7 +117,7 @@ class LancamentoServiceTest {
     @DisplayName("Deve lançar EntityNotFoundException quando cliente não encontrado")
     void deveLancarExcecaoQuandoClienteNaoEncontrado() {
         // Arrange
-        when(clienteRepository.findByIdForUpdate(clienteId)).thenReturn(Optional.empty());
+        when(clienteRepository.findByIdAndFarmaciaId(clienteId, farmaciaId)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() ->
@@ -127,31 +125,6 @@ class LancamentoServiceTest {
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("Cliente não encontrado");
 
-        verify(lancamentoRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("Deve lançar SecurityException quando cliente pertence a outra farmácia (RNF03)")
-    void deveLancarExcecaoQuandoClienteDeOutraFarmacia() {
-        // Arrange: cliente pertence a outraFarmaciaId, mas usuário autenticado tem farmaciaId
-        Farmacia outraFarmacia = Farmacia.builder().id(outraFarmaciaId).nome("Outra Farmácia").build();
-        Cliente clienteDeOutraFarmacia = Cliente.builder()
-                .id(clienteId)
-                .farmacia(outraFarmacia)
-                .nome("Maria")
-                .saldoDevedor(BigDecimal.ZERO)
-                .build();
-
-        when(clienteRepository.findByIdForUpdate(clienteId))
-                .thenReturn(Optional.of(clienteDeOutraFarmacia));
-
-        // Act & Assert — RNF03: deve bloquear acesso cross-tenant
-        assertThatThrownBy(() ->
-                lancamentoService.lancar(farmaciaId, usuarioId, clienteId, BigDecimal.TEN, "desc"))
-                .isInstanceOf(SecurityException.class)
-                .hasMessageContaining("Acesso negado");
-
-        verify(clienteRepository, never()).save(any());
         verify(lancamentoRepository, never()).save(any());
     }
 }

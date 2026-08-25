@@ -58,6 +58,15 @@ public class Usuario implements UserDetails {
     @Column(nullable = false, length = 10)
     private Perfil perfil;
 
+    /**
+     * Indica se o usuário está ativo (Problema 5 — Segurança).
+     * Quando false, o JwtAuthFilter recusa a autenticação mesmo com token JWT válido,
+     * permitindo revogar sessões instantaneamente ao demitir/excluir um funcionário.
+     */
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean ativo = true;
+
     // ——— UserDetails ———
 
     @Override
@@ -92,6 +101,7 @@ public class Usuario implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        // Problema 5: retorna false para usuários desativados, bloqueando acesso mesmo com JWT válido
+        return ativo;
     }
 }

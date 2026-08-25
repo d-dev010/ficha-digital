@@ -47,8 +47,17 @@ public class Cliente {
     private String cpf;
 
     /**
+     * Versão para Optimistic Locking (Problema 3 — Performance).
+     * Substitui o SELECT FOR UPDATE pessimista. O Spring lança ObjectOptimisticLockingFailureException
+     * em caso de escrita concorrente, que é tratada com retry na camada de service.
+     */
+    @Version
+    @Column(nullable = false)
+    private Long version;
+
+    /**
      * Saldo devedor atual. Atualizado de forma transacional em LancamentoService
-     * e PagamentoService via @Transactional + lock pessimista (RNF10).
+     * e PagamentoService via @Transactional + optimistic lock (RNF10).
      */
     @NotNull
     @Column(name = "saldo_devedor", nullable = false, precision = 10, scale = 2)

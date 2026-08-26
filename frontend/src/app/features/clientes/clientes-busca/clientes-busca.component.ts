@@ -37,7 +37,6 @@ import { NovoClienteDialogComponent } from './novo-cliente-dialog.component';
 export class ClientesBuscaComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private fb = inject(FormBuilder);
-
   form = this.fb.nonNullable.group({ busca: [''] });
 
   clientes = signal<ClienteResumo[]>([]);

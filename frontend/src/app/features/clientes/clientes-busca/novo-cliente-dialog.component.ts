@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ClientesService } from '../clientes.service';
+import { InputMaskDirective } from '../../../shared/directives/input-mask.directive';
 
 @Component({
   selector: 'app-novo-cliente-dialog',
@@ -15,7 +16,7 @@ import { ClientesService } from '../clientes.service';
   imports: [
     CommonModule, ReactiveFormsModule, MatDialogModule,
     MatFormFieldModule, MatInputModule, MatButtonModule,
-    MatIconModule, MatProgressSpinnerModule,
+    MatIconModule, MatProgressSpinnerModule, InputMaskDirective,
   ],
   template: `
     <h2 mat-dialog-title>Novo Cliente</h2>
@@ -31,12 +32,14 @@ import { ClientesService } from '../clientes.service';
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Telefone</mat-label>
-          <input matInput formControlName="telefone" id="novo-cliente-telefone" placeholder="(11) 99999-9999">
+          <input matInput formControlName="telefone" id="novo-cliente-telefone"
+                 mask="telefone" placeholder="(11) 99999-9999" inputmode="tel">
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>CPF (opcional)</mat-label>
-          <input matInput formControlName="cpf" id="novo-cliente-cpf" placeholder="000.000.000-00">
+          <input matInput formControlName="cpf" id="novo-cliente-cpf"
+                 mask="cpf" placeholder="000.000.000-00" inputmode="numeric">
         </mat-form-field>
 
         @if (erro()) {

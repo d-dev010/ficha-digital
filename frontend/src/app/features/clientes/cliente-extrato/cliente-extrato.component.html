@@ -27,9 +27,16 @@
         <div>
           <p class="saldo-label">Saldo devedor</p>
           <p class="saldo-valor">{{ cliente()?.saldoDevedor | currencyBr }}</p>
-          @if (cliente()?.telefone) {
-            <p class="saldo-telefone"><mat-icon inline>phone</mat-icon> {{ cliente()?.telefone }}</p>
-          }
+          <div class="saldo-telefone-container">
+            @if (cliente()?.telefone) {
+              <p class="saldo-telefone"><mat-icon inline>phone</mat-icon> {{ cliente()?.telefone }}</p>
+            } @else {
+              <p class="saldo-telefone sem-telefone">Sem telefone</p>
+            }
+            <button mat-icon-button class="btn-editar-telefone" (click)="abrirEditarTelefone()" matTooltip="Editar telefone" aria-label="Editar telefone">
+              <mat-icon inline>edit</mat-icon>
+            </button>
+          </div>
         </div>
         <mat-icon class="saldo-icon">
           {{ (cliente()?.saldoDevedor ?? 0) > 0 ? 'trending_up' : 'check_circle' }}

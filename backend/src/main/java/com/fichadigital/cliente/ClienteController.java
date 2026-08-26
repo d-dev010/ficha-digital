@@ -77,4 +77,20 @@ public class ClienteController {
         UUID farmaciaId = SecurityUtils.farmaciaId(); // RNF03
         return ResponseEntity.ok(clienteService.detalhe(farmaciaId, id));
     }
+
+    /**
+     * PATCH /clientes/{id}/telefone
+     * Atualiza (ou remove) o telefone do cliente.
+     * farmaciaId do JWT — nunca do body (RNF03).
+     *
+     * @return ClienteDetalhe atualizado ou 404 se não encontrado.
+     */
+    @PatchMapping("/{id}/telefone")
+    public ResponseEntity<ClienteDetalhe> atualizarTelefone(
+            @PathVariable UUID id,
+            @RequestBody AtualizarTelefoneRequest request) {
+        UUID farmaciaId = SecurityUtils.farmaciaId(); // RNF03
+        return ResponseEntity.ok(clienteService.atualizarTelefone(farmaciaId, id, request));
+    }
 }
+

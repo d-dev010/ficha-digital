@@ -41,6 +41,12 @@ export class ClientesService {
     );
   }
 
+  atualizarTelefone(clienteId: string, telefone: string | null): Observable<ClienteDetalhe> {
+    return this.http.patch<ClienteDetalhe>(
+      `${API_URL}/clientes/${clienteId}/telefone`, { telefone }
+    );
+  }
+
   extrato(clienteId: string, page = 0, size = 50): Observable<Page<ExtratoItem>> {
     const params = new HttpParams().set('page', page).set('size', size);
     return this.http.get<Page<ExtratoItem>>(

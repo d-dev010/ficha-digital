@@ -81,6 +81,26 @@ public class ClienteService {
     }
 
     /**
+     * Atualiza o telefone de um cliente (US — editar telefone).
+     * Permite valor nulo para remover o telefone.
+     *
+     * @param farmaciaId UUID da farmácia — extraído do JWT (RNF03)
+     * @param clienteId  UUID do cliente
+     * @param request    Novo telefone (pode ser nulo)
+     * @return ClienteDetalhe atualizado
+     */
+    @Transactional
+    public ClienteDetalhe atualizarTelefone(UUID farmaciaId, UUID clienteId, AtualizarTelefoneRequest request) {
+        Cliente cliente = clienteRepository.findByIdAndFarmaciaId(clienteId, farmaciaId)
+                .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado"));
+        cliente.setTelefone(request.telefone() != null && !request.telefone().isBlank()
+                ? request.telefone()
+                : null);
+        return ClienteDetalhe.from(clienteRepository.save(cliente));
+    }
+
+
+    /**
      * Mascara o CPF para listagens: "123.456.789-00" → "123.***.**\*-00" (RNF04).
      * Aceita CPF com ou sem formatação.
      */

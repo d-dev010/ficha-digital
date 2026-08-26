@@ -38,7 +38,11 @@
 .saldo-label { font-size: 13px; color: #757575; margin: 0 0 4px; }
 .saldo-valor { font-size: 32px; font-weight: 800; color: #1a237e; margin: 0 0 4px; }
 .saldo-devedor .saldo-valor { color: #c62828; }
+.saldo-telefone-container { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
 .saldo-telefone { font-size: 13px; color: #616161; margin: 0; display: flex; align-items: center; gap: 4px; }
+.sem-telefone { font-style: italic; opacity: 0.7; }
+.btn-editar-telefone { transform: scale(0.8); opacity: 0.6; transition: opacity 0.2s; }
+.btn-editar-telefone:hover { opacity: 1; }
 .saldo-icon { font-size: 48px; width: 48px; height: 48px; color: #c5cae9; opacity: 0.5; }
 .saldo-devedor .saldo-icon { color: #ef9a9a; }
 

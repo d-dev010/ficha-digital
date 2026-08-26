@@ -19,6 +19,7 @@ import { ExtratoItem } from '../../../core/models/pagamento.model';
 import { CurrencyBrPipe } from '../../../shared/pipes/currency-br.pipe';
 import { LancarFiadoDialogComponent } from './lancar-fiado-dialog.component';
 import { RegistrarPagamentoDialogComponent } from './registrar-pagamento-dialog.component';
+import { EditarTelefoneDialogComponent } from './editar-telefone-dialog.component';
 
 @Component({
   selector: 'app-cliente-extrato',
@@ -82,6 +83,23 @@ export class ClienteExtratoComponent implements OnInit {
       data: { clienteId: this.clienteId, nomeCliente: this.cliente()?.nome, saldoAtual: this.cliente()?.saldoDevedor },
     });
     ref.afterClosed().subscribe(registrou => { if (registrou) this.carregar(); });
+  }
+
+  abrirEditarTelefone() {
+    const ref = this.dialog.open(EditarTelefoneDialogComponent, {
+      width: '400px',
+      data: {
+        clienteId: this.clienteId,
+        nomeCliente: this.cliente()?.nome,
+        telefoneAtual: this.cliente()?.telefone,
+      },
+    });
+    ref.afterClosed().subscribe(editou => {
+      if (editou) {
+        // Update the client state with the new details returned from the backend
+        this.cliente.set(editou);
+      }
+    });
   }
 
   voltar() {

@@ -1,0 +1,85 @@
+<mat-toolbar color="primary" class="toolbar">
+  <button mat-icon-button (click)="voltar()" matTooltip="Voltar" id="btn-voltar">
+    <mat-icon>arrow_back</mat-icon>
+  </button>
+  <span class="toolbar-title">{{ cliente()?.nome ?? 'Carregando...' }}</span>
+</mat-toolbar>
+
+@if (carregando()) {
+  <div class="estado-loading">
+    <mat-spinner diameter="48"></mat-spinner>
+  </div>
+}
+
+@if (!carregando() && carregarErro()) {
+  <div class="estado-loading">
+    <mat-icon style="font-size: 48px; width: 48px; height: 48px; color: #c62828;">error_outline</mat-icon>
+    <p style="color: #c62828; margin-top: 12px;">{{ carregarErro() }}</p>
+    <button mat-flat-button color="primary" (click)="carregar()">Tentar novamente</button>
+  </div>
+}
+
+@if (!carregando() && cliente()) {
+  <div class="page-container">
+    <!-- Card de saldo -->
+    <mat-card class="saldo-card" [class.saldo-devedor]="(cliente()?.saldoDevedor ?? 0) > 0">
+      <mat-card-content class="saldo-card-content">
+        <div>
+          <p class="saldo-label">Saldo devedor</p>
+          <p class="saldo-valor">{{ cliente()?.saldoDevedor | currencyBr }}</p>
+          @if (cliente()?.telefone) {
+            <p class="saldo-telefone"><mat-icon inline>phone</mat-icon> {{ cliente()?.telefone }}</p>
+          }
+        </div>
+        <mat-icon class="saldo-icon">
+          {{ (cliente()?.saldoDevedor ?? 0) > 0 ? 'trending_up' : 'check_circle' }}
+        </mat-icon>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Botões de ação -->
+    <div class="acoes">
+      <button mat-flat-button color="warn" class="btn-acao" id="btn-lancar-fiado" (click)="abrirLancarFiado()">
+        <mat-icon>add_shopping_cart</mat-icon>
+        Lançar Fiado
+      </button>
+      <button mat-flat-button color="primary" class="btn-acao" id="btn-registrar-pagamento"
+              (click)="abrirRegistrarPagamento()" [disabled]="(cliente()?.saldoDevedor ?? 0) === 0">
+        <mat-icon>payments</mat-icon>
+        Registrar Pagamento
+      </button>
+    </div>
+
+    <!-- Histórico -->
+    <h3 class="historico-titulo">Histórico de movimentações</h3>
+
+    @if (extrato().length === 0) {
+      <div class="estado-vazio">
+        <mat-icon>receipt_long</mat-icon>
+        <p>Nenhuma movimentação ainda.</p>
+      </div>
+    }
+
+    <div class="extrato-lista">
+      @for (item of extrato(); track item.id) {
+        <mat-card class="extrato-item" [class.lancamento]="item.tipo === 'LANCAMENTO'" [class.pagamento]="item.tipo === 'PAGAMENTO'">
+          <mat-card-content class="extrato-item-content">
+            <div class="extrato-icone-wrapper" [class.icone-lancamento]="item.tipo === 'LANCAMENTO'" [class.icone-pagamento]="item.tipo === 'PAGAMENTO'">
+              <mat-icon>{{ item.tipo === 'LANCAMENTO' ? 'shopping_cart' : 'payments' }}</mat-icon>
+            </div>
+            <div class="extrato-info">
+              <span class="extrato-tipo">{{ item.tipo === 'LANCAMENTO' ? 'Fiado' : 'Pagamento' }}</span>
+              @if (item.descricao) {
+                <span class="extrato-descricao">{{ item.descricao }}</span>
+              }
+              <span class="extrato-meta">{{ item.data | date:'dd/MM/yyyy HH:mm' }} · {{ item.nomeResponsavel }}</span>
+            </div>
+            <span class="extrato-valor" [class.valor-lancamento]="item.tipo === 'LANCAMENTO'" [class.valor-pagamento]="item.tipo === 'PAGAMENTO'">
+              {{ item.tipo === 'LANCAMENTO' ? '+' : '-' }}{{ item.valor | currencyBr }}
+            </span>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  </div>
+}

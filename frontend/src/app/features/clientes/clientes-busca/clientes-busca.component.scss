@@ -1,0 +1,127 @@
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+
+  .toolbar-logo { margin-right: 8px; }
+  .toolbar-title { font-weight: 700; font-size: 18px; }
+  .spacer { flex: 1; }
+  .usuario-nome { font-size: 14px; opacity: 0.85; margin-right: 8px; }
+}
+
+.page-container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.header-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+
+  .page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a237e;
+    margin: 0;
+  }
+}
+
+.busca-field {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.resultado-info {
+  font-size: 13px;
+  color: #757575;
+  margin: 4px 0 12px;
+}
+
+.clientes-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cliente-card {
+  cursor: pointer;
+  border-radius: 12px !important;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+  border: 1px solid #e8eaf6;
+
+  &:hover {
+    box-shadow: 0 6px 20px rgba(57, 73, 171, 0.15) !important;
+    transform: translateY(-2px);
+  }
+}
+
+.cliente-card-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px !important;
+}
+
+.cliente-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cliente-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #e8eaf6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  mat-icon { color: #3949ab; }
+}
+
+.cliente-dados {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  .cliente-nome { font-weight: 600; font-size: 15px; color: #212121; }
+  .cliente-detalhe { font-size: 13px; color: #757575; }
+}
+
+.cliente-saldo {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  .saldo-label { font-size: 11px; color: #9e9e9e; text-transform: uppercase; }
+  .saldo-valor { font-size: 16px; font-weight: 700; }
+
+  &.saldo-devedor .saldo-valor { color: #c62828; }
+  &.saldo-zerado .saldo-valor { color: #2e7d32; }
+}
+
+.estado-vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 64px 16px;
+  color: #9e9e9e;
+  text-align: center;
+
+  .vazio-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    opacity: 0.3;
+  }
+
+  p { font-size: 16px; margin: 0; }
+}

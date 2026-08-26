@@ -1,0 +1,131 @@
+.toolbar {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  .toolbar-title { font-weight: 700; font-size: 18px; margin-left: 8px; }
+}
+
+.estado-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 40vh;
+}
+
+.page-container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.saldo-card {
+  border-radius: 16px !important;
+  margin-bottom: 20px;
+  background: #f3f4ff !important;
+  border: 2px solid #c5cae9;
+
+  &.saldo-devedor {
+    background: #fff3f3 !important;
+    border-color: #ffcdd2;
+  }
+}
+
+.saldo-card-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px !important;
+}
+
+.saldo-label { font-size: 13px; color: #757575; margin: 0 0 4px; }
+.saldo-valor { font-size: 32px; font-weight: 800; color: #1a237e; margin: 0 0 4px; }
+.saldo-devedor .saldo-valor { color: #c62828; }
+.saldo-telefone { font-size: 13px; color: #616161; margin: 0; display: flex; align-items: center; gap: 4px; }
+.saldo-icon { font-size: 48px; width: 48px; height: 48px; color: #c5cae9; opacity: 0.5; }
+.saldo-devedor .saldo-icon { color: #ef9a9a; }
+
+.acoes {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+
+  .btn-acao {
+    flex: 1;
+    min-width: 160px;
+    height: 48px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 10px !important;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+.historico-titulo {
+  font-size: 16px;
+  font-weight: 700;
+  color: #424242;
+  margin: 0 0 12px;
+}
+
+.extrato-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.extrato-item {
+  border-radius: 12px !important;
+  border-left: 4px solid #e0e0e0 !important;
+  &.lancamento { border-left-color: #ef5350 !important; }
+  &.pagamento { border-left-color: #43a047 !important; }
+}
+
+.extrato-item-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px !important;
+}
+
+.extrato-icone-wrapper {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #fce4e4;
+  &.icone-pagamento { background: #e8f5e9; }
+  mat-icon { font-size: 20px; width: 20px; height: 20px; color: #e53935; }
+  &.icone-pagamento mat-icon { color: #43a047; }
+}
+
+.extrato-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  .extrato-tipo { font-weight: 600; font-size: 14px; color: #212121; }
+  .extrato-descricao { font-size: 13px; color: #616161; }
+  .extrato-meta { font-size: 11px; color: #9e9e9e; }
+}
+
+.extrato-valor {
+  font-weight: 700;
+  font-size: 15px;
+  &.valor-lancamento { color: #c62828; }
+  &.valor-pagamento { color: #2e7d32; }
+}
+
+.estado-vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 16px;
+  color: #bdbdbd;
+  mat-icon { font-size: 48px; width: 48px; height: 48px; }
+  p { margin: 0; font-size: 15px; }
+}

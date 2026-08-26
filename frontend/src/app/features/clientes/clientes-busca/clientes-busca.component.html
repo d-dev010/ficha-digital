@@ -1,0 +1,91 @@
+<mat-toolbar color="primary" class="toolbar">
+  <mat-icon class="toolbar-logo">local_pharmacy</mat-icon>
+  <span class="toolbar-title">Ficha Digital</span>
+  <span class="spacer"></span>
+  <span class="usuario-nome">{{ auth.usuario()?.nome }}</span>
+  <button mat-icon-button (click)="logout()" matTooltip="Sair" id="btn-logout">
+    <mat-icon>logout</mat-icon>
+  </button>
+</mat-toolbar>
+
+<div class="page-container">
+  <div class="header-section">
+    <h2 class="page-title">Clientes</h2>
+    <button mat-flat-button color="primary" (click)="abrirNovoCliente()" id="btn-novo-cliente">
+      <mat-icon>person_add</mat-icon>
+      Novo Cliente
+    </button>
+  </div>
+
+  <!-- Campo de busca com debounce -->
+  <mat-form-field appearance="outline" class="busca-field">
+    <mat-label>Buscar cliente por nome, telefone ou CPF</mat-label>
+    <mat-icon matPrefix>search</mat-icon>
+    <input matInput [formControl]="form.controls.busca"
+           id="input-busca" placeholder="Ex: João, (11) 9..." autocomplete="off">
+    @if (form.controls.busca.value) {
+      <button mat-icon-button matSuffix (click)="form.controls.busca.setValue('')">
+        <mat-icon>close</mat-icon>
+      </button>
+    }
+  </mat-form-field>
+
+  <!-- Estado: carregando -->
+  @if (carregando()) {
+    <div class="estado-vazio">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+  }
+
+  <!-- Estado: resultados -->
+  @if (!carregando() && clientes().length > 0) {
+    <p class="resultado-info">
+      {{ totalEncontrados() }} cliente(s) encontrado(s)
+    </p>
+
+    <div class="clientes-lista">
+      @for (c of clientes(); track c.id) {
+        <mat-card class="cliente-card" (click)="abrirCliente(c.id)" [id]="'card-cliente-' + c.id">
+          <mat-card-content class="cliente-card-content">
+            <div class="cliente-info">
+              <div class="cliente-avatar">
+                <mat-icon>person</mat-icon>
+              </div>
+              <div class="cliente-dados">
+                <span class="cliente-nome">{{ c.nome }}</span>
+                @if (c.telefone) {
+                  <span class="cliente-detalhe">{{ c.telefone }}</span>
+                }
+                @if (c.cpfMascarado) {
+                  <span class="cliente-detalhe">CPF: {{ c.cpfMascarado }}</span>
+                }
+              </div>
+            </div>
+            <div class="cliente-saldo" [class.saldo-devedor]="c.saldoDevedor > 0" [class.saldo-zerado]="c.saldoDevedor === 0">
+              <span class="saldo-label">Saldo</span>
+              <span class="saldo-valor">{{ c.saldoDevedor | currencyBr }}</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  }
+
+  <!-- Estado: vazio -->
+  @if (!carregando() && clientes().length === 0) {
+    <div class="estado-vazio">
+      <mat-icon class="vazio-icon">person_search</mat-icon>
+      <p>
+        @if (buscaAtiva()) {
+          Nenhum cliente encontrado para "<strong>{{ buscaAtiva() }}</strong>"
+        } @else {
+          Nenhum cliente cadastrado ainda.
+        }
+      </p>
+      <button mat-flat-button color="primary" (click)="abrirNovoCliente()">
+        <mat-icon>person_add</mat-icon>
+        Cadastrar primeiro cliente
+      </button>
+    </div>
+  }
+</div>

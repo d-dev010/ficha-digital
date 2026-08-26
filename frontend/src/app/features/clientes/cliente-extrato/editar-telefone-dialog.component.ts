@@ -1,4 +1,4 @@
-import { Component, Inject, signal, inject } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -54,7 +54,11 @@ import { InputMaskDirective } from '../../../shared/directives/input-mask.direct
             .erro { color: #c62828; font-size: 13px; padding: 4px 0; }`],
 })
 export class EditarTelefoneDialogComponent {
+  readonly data = inject<{ clienteId: string; nomeCliente: string; telefoneAtual: string | null }>(MAT_DIALOG_DATA);
   private fb = inject(FormBuilder);
+  private dialogRef = inject<MatDialogRef<EditarTelefoneDialogComponent>>(MatDialogRef);
+  private clientesService = inject(ClientesService);
+
   // Mínimo de 14 chars para "(00) 0000-0000", 15 para celular — ou vazio (campo opcional)
   form = this.fb.nonNullable.group({
     telefone: [
@@ -66,11 +70,7 @@ export class EditarTelefoneDialogComponent {
   salvando = signal(false);
   erro = signal<string | null>(null);
 
-  constructor(
-    private clientesService: ClientesService,
-    private dialogRef: MatDialogRef<EditarTelefoneDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { clienteId: string; nomeCliente: string; telefoneAtual: string | null },
-  ) {}
+  constructor() {}
 
   salvar() {
     if (this.form.invalid) return;

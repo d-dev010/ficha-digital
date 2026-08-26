@@ -95,6 +95,13 @@
             <version>2.6.0</version>
         </dependency>
 
+        <!-- Rate Limiting (Problema M3) -->
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j-core</artifactId>
+            <version>8.10.1</version>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

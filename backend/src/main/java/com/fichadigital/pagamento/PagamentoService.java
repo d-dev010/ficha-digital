@@ -7,6 +7,8 @@ import com.fichadigital.usuario.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +39,10 @@ public class PagamentoService {
     private final ClienteRepository clienteRepository;
     private final UsuarioRepository usuarioRepository;
 
+    @Autowired
+    @Lazy
+    private PagamentoService self;
+
     /**
      * Registra um pagamento (total ou parcial) para o cliente (US07).
      *
@@ -53,7 +59,8 @@ public class PagamentoService {
         int tentativas = 0;
         while (true) {
             try {
-                return tentarRegistrar(farmaciaId, usuarioId, clienteId, valor);
+                // Problema C2: Chama via 'self' para ativar o @Transactional
+                return self.tentarRegistrar(farmaciaId, usuarioId, clienteId, valor);
             } catch (ObjectOptimisticLockingFailureException e) {
                 tentativas++;
                 if (tentativas >= MAX_RETRIES) {
@@ -68,7 +75,7 @@ public class PagamentoService {
     }
 
     @Transactional
-    private Pagamento tentarRegistrar(UUID farmaciaId, UUID usuarioId, UUID clienteId, BigDecimal valor) {
+    public Pagamento tentarRegistrar(UUID farmaciaId, UUID usuarioId, UUID clienteId, BigDecimal valor) {
         // Optimistic Lock via @Version — sem bloquear a linha do banco (RNF10 + Problema 3)
         Cliente cliente = clienteRepository.findByIdAndFarmaciaId(clienteId, farmaciaId)
                 .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado: " + clienteId));

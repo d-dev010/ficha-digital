@@ -25,7 +25,7 @@ public class LancamentoController {
     /**
      * POST /clientes/{clienteId}/lancamentos
      * Lança um fiado para o cliente (US05).
-     * Atualiza saldo_devedor de forma transacional e com lock pessimista (RNF10).
+     * Atualiza saldo_devedor de forma transacional e com lock otimista (RNF10).
      *
      * @param clienteId Path variable — UUID do cliente
      * @param request   Valor + descrição livre

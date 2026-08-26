@@ -5,10 +5,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -50,6 +52,24 @@ public class GlobalExceptionHandler {
         ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
         pd.setTitle("Credenciais inválidas");
         pd.setDetail("E-mail ou senha incorretos");
+        return pd;
+    }
+
+    /** Usuário desativado (Problema C1) — 401 */
+    @ExceptionHandler(DisabledException.class)
+    public ProblemDetail handleDisabled(DisabledException ex) {
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
+        pd.setTitle("Usuário desativado");
+        pd.setDetail("Esta conta foi desativada e não pode acessar o sistema.");
+        return pd;
+    }
+
+    /** Colisão de escrita concorrente após retries (Problema A3) — 409 */
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ProblemDetail handleOptimisticLocking(ObjectOptimisticLockingFailureException ex) {
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.CONFLICT);
+        pd.setTitle("Conflito de concorrência");
+        pd.setDetail("O registro foi modificado por outra operação simultânea. Tente novamente.");
         return pd;
     }
 

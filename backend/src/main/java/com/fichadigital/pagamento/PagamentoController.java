@@ -25,7 +25,7 @@ public class PagamentoController {
     /**
      * POST /clientes/{clienteId}/pagamentos
      * Registra um pagamento (total ou parcial) do cliente (US07).
-     * Abate saldo_devedor de forma transacional e com lock pessimista (RNF10).
+     * Abate saldo_devedor de forma transacional e com lock otimista (RNF10).
      *
      * @param clienteId Path variable — UUID do cliente
      * @param request   Valor do pagamento

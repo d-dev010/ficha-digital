@@ -8,6 +8,15 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Refill;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Service de autenticação.
@@ -22,6 +31,17 @@ public class AuthService {
     private final UsuarioRepository usuarioRepository;
     private final JwtService jwtService;
 
+    // Cache simples de rate limiting por e-mail (Problema M3)
+    private final Map<String, Bucket> loginBuckets = new ConcurrentHashMap<>();
+
+    private Bucket resolveBucket(String email) {
+        return loginBuckets.computeIfAbsent(email, k -> {
+            Refill refill = Refill.intervally(5, Duration.ofMinutes(5));
+            Bandwidth limit = Bandwidth.classic(5, refill);
+            return Bucket.builder().addLimit(limit).build();
+        });
+    }
+
     /**
      * Autentica o usuário e retorna um JWT.
      *
@@ -30,6 +50,11 @@ public class AuthService {
      * @throws AuthenticationException se credenciais inválidas.
      */
     public TokenResponse autenticar(LoginRequest request) {
+        Bucket bucket = resolveBucket(request.email());
+        if (!bucket.tryConsume(1)) {
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Muitas tentativas de login. Tente novamente mais tarde.");
+        }
+
         // Spring Security valida email + bcrypt(senha) automaticamente
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.senha())

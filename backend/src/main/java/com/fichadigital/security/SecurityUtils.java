@@ -1,6 +1,8 @@
 package com.fichadigital.security;
 
 import com.fichadigital.usuario.Usuario;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.UUID;
@@ -20,7 +22,11 @@ public final class SecurityUtils {
      * Retorna o usuário autenticado no SecurityContext.
      */
     public static Usuario usuarioAutenticado() {
-        return (Usuario) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            throw new AccessDeniedException("Nenhum usuário autenticado no contexto de segurança");
+        }
+        return (Usuario) auth.getPrincipal();
     }
 
     /**

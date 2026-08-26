@@ -7,6 +7,8 @@ import com.fichadigital.usuario.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +39,10 @@ public class LancamentoService {
     private final ClienteRepository clienteRepository;
     private final UsuarioRepository usuarioRepository;
 
+    @Autowired
+    @Lazy
+    private LancamentoService self;
+
     /**
      * Lança um fiado para o cliente (US05).
      *
@@ -58,7 +64,8 @@ public class LancamentoService {
         int tentativas = 0;
         while (true) {
             try {
-                return tentarLancar(farmaciaId, usuarioId, clienteId, valor, descricao);
+                // Problema C2: Chama via 'self' para passar pelo proxy do Spring e ativar o @Transactional
+                return self.tentarLancar(farmaciaId, usuarioId, clienteId, valor, descricao);
             } catch (ObjectOptimisticLockingFailureException e) {
                 tentativas++;
                 if (tentativas >= MAX_RETRIES) {
@@ -73,7 +80,7 @@ public class LancamentoService {
     }
 
     @Transactional
-    private Lancamento tentarLancar(UUID farmaciaId, UUID usuarioId, UUID clienteId,
+    public Lancamento tentarLancar(UUID farmaciaId, UUID usuarioId, UUID clienteId,
                                     BigDecimal valor, String descricao) {
         // Validação multi-tenant com Optimistic Lock via @Version (RNF03 + RNF10)
         Cliente cliente = clienteRepository.findByIdAndFarmaciaId(clienteId, farmaciaId)

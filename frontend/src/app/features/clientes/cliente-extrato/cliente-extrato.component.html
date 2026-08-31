@@ -37,6 +37,9 @@
               <mat-icon inline>edit</mat-icon>
             </button>
           </div>
+          @if (cliente()?.endereco) {
+            <p class="saldo-telefone"><mat-icon inline>location_on</mat-icon> {{ cliente()?.endereco }}</p>
+          }
         </div>
         <mat-icon class="saldo-icon">
           {{ (cliente()?.saldoDevedor ?? 0) > 0 ? 'trending_up' : 'check_circle' }}
@@ -80,6 +83,9 @@
                 <span class="extrato-descricao">{{ item.descricao }}</span>
               }
               <span class="extrato-meta">{{ item.data | date:'dd/MM/yyyy HH:mm' }} · {{ item.nomeResponsavel }}</span>
+              @if (item.tipo === 'LANCAMENTO' && item.pessoaRetirou) {
+                <span class="extrato-retirado"><mat-icon inline>person_outline</mat-icon> Retirado por: <strong>{{ item.pessoaRetirou }}</strong></span>
+              }
             </div>
             <span class="extrato-valor" [class.valor-lancamento]="item.tipo === 'LANCAMENTO'" [class.valor-pagamento]="item.tipo === 'PAGAMENTO'">
               {{ item.tipo === 'LANCAMENTO' ? '+' : '-' }}{{ item.valor | currencyBr }}

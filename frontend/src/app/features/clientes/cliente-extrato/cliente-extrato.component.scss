@@ -114,6 +114,14 @@
   .extrato-tipo { font-weight: 600; font-size: 14px; color: #212121; }
   .extrato-descricao { font-size: 13px; color: #616161; }
   .extrato-meta { font-size: 11px; color: #9e9e9e; }
+  .extrato-retirado {
+    font-size: 11px;
+    color: #5c6bc0;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    mat-icon { font-size: 13px; width: 13px; height: 13px; }
+  }
 }
 
 .extrato-valor {

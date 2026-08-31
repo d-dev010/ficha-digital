@@ -94,6 +94,10 @@ export class ClientesBuscaComponent implements OnInit, OnDestroy {
     });
   }
 
+  irParaDashboard() {
+    this.router.navigate(['/dashboard']);
+  }
+
   logout() {
     this.auth.logout();
   }

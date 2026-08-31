@@ -56,24 +56,28 @@ public class ExtratoController {
 
         // Query nativa UNION ALL — junção e ordenação feitas no banco (Problema 1)
         String sql = """
-                SELECT id, 'LANCAMENTO' AS tipo, valor, descricao, data, nome_usuario
+                SELECT id, tipo, valor, descricao, data, nome_usuario, pessoa_retirou
                   FROM (
-                         SELECT l.id::text   AS id,
+                         SELECT l.id::text        AS id,
+                                'LANCAMENTO'      AS tipo,
                                 l.valor,
                                 l.descricao,
                                 l.data,
-                                u.nome       AS nome_usuario
+                                u.nome            AS nome_usuario,
+                                l.pessoa_retirou
                            FROM lancamento l
                            JOIN cliente c ON c.id = l.cliente_id
                            JOIN usuario u ON u.id = l.usuario_id
                           WHERE c.id = :clienteId
                             AND c.farmacia_id = :farmaciaId
                          UNION ALL
-                         SELECT p.id::text   AS id,
+                         SELECT p.id::text        AS id,
+                                'PAGAMENTO'       AS tipo,
                                 p.valor,
-                                NULL          AS descricao,
+                                NULL              AS descricao,
                                 p.data,
-                                u.nome        AS nome_usuario
+                                u.nome            AS nome_usuario,
+                                NULL              AS pessoa_retirou
                            FROM pagamento p
                            JOIN cliente c ON c.id = p.cliente_id
                            JOIN usuario u ON u.id = p.usuario_id
@@ -110,14 +114,26 @@ public class ExtratoController {
         List<Object[]> rows = dataQuery.getResultList();
         long total = ((Number) countQuery.getSingleResult()).longValue();
 
-        List<ExtratoItem> itens = rows.stream().map(r -> new ExtratoItem(
-                UUID.fromString((String) r[0]),
-                TipoMovimento.valueOf((String) r[1]),
-                (BigDecimal) r[2],
-                (String) r[3],
-                ((java.sql.Timestamp) r[4]).toInstant(),
-                (String) r[5]
-        )).toList();
+        List<ExtratoItem> itens = rows.stream().map(r -> {
+            Instant data;
+            if (r[4] instanceof Instant i) {
+                data = i;
+            } else if (r[4] instanceof java.time.OffsetDateTime odt) {
+                data = odt.toInstant();
+            } else {
+                data = ((java.sql.Timestamp) r[4]).toInstant();
+            }
+
+            return new ExtratoItem(
+                    UUID.fromString((String) r[0]),
+                    TipoMovimento.valueOf((String) r[1]),
+                    (BigDecimal) r[2],
+                    (String) r[3],
+                    data,
+                    (String) r[5],
+                    (String) r[6]
+            );
+        }).toList();
 
         return ResponseEntity.ok(new PageImpl<>(itens, pageable, total));
     }
@@ -134,6 +150,7 @@ public class ExtratoController {
             BigDecimal valor,
             String descricao,
             Instant data,
-            String nomeResponsavel
+            String nomeResponsavel,
+            String pessoaRetirou
     ) {}
 }

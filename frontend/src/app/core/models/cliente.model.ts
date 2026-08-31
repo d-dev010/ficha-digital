@@ -3,6 +3,7 @@ export interface ClienteResumo {
   nome: string;
   telefone: string | null;
   cpfMascarado: string | null;
+  endereco: string | null;
   saldoDevedor: number;
 }
 
@@ -11,6 +12,7 @@ export interface ClienteDetalhe {
   nome: string;
   telefone: string | null;
   cpf: string | null;
+  endereco: string | null;
   saldoDevedor: number;
 }
 
@@ -18,6 +20,7 @@ export interface CadastrarClienteRequest {
   nome: string;
   telefone?: string;
   cpf?: string;
+  endereco?: string;
 }
 
 // Resposta paginada do Spring

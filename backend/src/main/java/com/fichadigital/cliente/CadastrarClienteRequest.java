@@ -12,5 +12,8 @@ public record CadastrarClienteRequest(
         String telefone,
 
         /** CPF é opcional conforme US03. */
-        String cpf
+        String cpf,
+
+        /** Endereço do cliente. Opcional. */
+        String endereco
 ) {}

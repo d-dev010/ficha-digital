@@ -85,7 +85,7 @@ class LancamentoServiceTest {
 
         // Act
         Lancamento resultado = lancamentoService.lancar(
-                farmaciaId, usuarioId, clienteId, valorFiado, "Remédio X");
+                farmaciaId, usuarioId, clienteId, valorFiado, "Remédio X", null);
 
         // Assert
         assertThat(resultado).isNotNull();
@@ -107,7 +107,7 @@ class LancamentoServiceTest {
         when(lancamentoRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         // Act
-        lancamentoService.lancar(farmaciaId, usuarioId, clienteId, novoLancamento, "desc");
+        lancamentoService.lancar(farmaciaId, usuarioId, clienteId, novoLancamento, "desc", null);
 
         // Assert
         assertThat(cliente.getSaldoDevedor()).isEqualByComparingTo("130.50");
@@ -121,7 +121,7 @@ class LancamentoServiceTest {
 
         // Act & Assert
         assertThatThrownBy(() ->
-                lancamentoService.lancar(farmaciaId, usuarioId, clienteId, BigDecimal.TEN, "desc"))
+                lancamentoService.lancar(farmaciaId, usuarioId, clienteId, BigDecimal.TEN, "desc", null))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("Cliente não encontrado");
 

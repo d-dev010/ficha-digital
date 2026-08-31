@@ -40,7 +40,7 @@ public class LancamentoController {
         UUID usuarioId = SecurityUtils.usuarioId();
 
         Lancamento lancamento = lancamentoService.lancar(
-                farmaciaId, usuarioId, clienteId, request.valor(), request.descricao());
+                farmaciaId, usuarioId, clienteId, request.valor(), request.descricao(), request.pessoaRetirou());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(LancamentoResponse.from(lancamento));
     }

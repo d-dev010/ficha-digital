@@ -14,5 +14,8 @@ public record LancarFiadoRequest(
         @DecimalMin(value = "0.01", message = "Valor deve ser maior que zero")
         BigDecimal valor,
 
-        String descricao
+        String descricao,
+
+        /** Nome de quem fisicamente retirou o item. Opcional — se nulo, assume-se o próprio cliente. */
+        String pessoaRetirou
 ) {}

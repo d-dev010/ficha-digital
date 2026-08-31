@@ -60,12 +60,12 @@ public class LancamentoService {
      * @return Lancamento persistido
      */
     public Lancamento lancar(UUID farmaciaId, UUID usuarioId, UUID clienteId,
-                             BigDecimal valor, String descricao) {
+                             BigDecimal valor, String descricao, String pessoaRetirou) {
         int tentativas = 0;
         while (true) {
             try {
                 // Problema C2: Chama via 'self' para passar pelo proxy do Spring e ativar o @Transactional
-                return self.tentarLancar(farmaciaId, usuarioId, clienteId, valor, descricao);
+                return self.tentarLancar(farmaciaId, usuarioId, clienteId, valor, descricao, pessoaRetirou);
             } catch (ObjectOptimisticLockingFailureException e) {
                 tentativas++;
                 if (tentativas >= MAX_RETRIES) {
@@ -81,7 +81,7 @@ public class LancamentoService {
 
     @Transactional
     public Lancamento tentarLancar(UUID farmaciaId, UUID usuarioId, UUID clienteId,
-                                    BigDecimal valor, String descricao) {
+                                    BigDecimal valor, String descricao, String pessoaRetirou) {
         // Validação multi-tenant com Optimistic Lock via @Version (RNF03 + RNF10)
         Cliente cliente = clienteRepository.findByIdAndFarmaciaId(clienteId, farmaciaId)
                 .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado: " + clienteId));
@@ -94,6 +94,7 @@ public class LancamentoService {
                 .usuario(usuario)
                 .valor(valor)
                 .descricao(descricao)
+                .pessoaRetirou(pessoaRetirou)
                 .build();
 
         // Atualização atômica do saldo dentro da mesma transação (RNF10)

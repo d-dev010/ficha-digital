@@ -19,4 +19,5 @@ export interface ExtratoItem {
   descricao: string | null;
   data: string;
   nomeResponsavel: string;
+  pessoaRetirou: string | null;
 }

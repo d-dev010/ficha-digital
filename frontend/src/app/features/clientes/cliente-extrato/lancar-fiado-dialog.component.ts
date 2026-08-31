@@ -36,6 +36,12 @@ import { ClientesService } from '../clientes.service';
           <textarea matInput formControlName="descricao" id="lancar-fiado-descricao" rows="2" placeholder="Opcional. Ex: Paracetamol, etc."></textarea>
         </mat-form-field>
 
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Quem retirou? (opcional)</mat-label>
+          <input matInput formControlName="pessoaRetirou" id="lancar-fiado-pessoa-retirou" placeholder="Nome de quem pegou o item">
+          <mat-hint>Deixe em branco se foi o próprio cliente</mat-hint>
+        </mat-form-field>
+
         @if (erro()) {
           <div class="erro">{{ erro() }}</div>
         }
@@ -59,6 +65,7 @@ export class LancarFiadoDialogComponent {
   form = this.fb.nonNullable.group({
     valor: [null as number | null, [Validators.required, Validators.min(0.01)]],
     descricao: [''],
+    pessoaRetirou: [''],
   });
 
   salvando = signal(false);
@@ -73,9 +80,13 @@ export class LancarFiadoDialogComponent {
   salvar() {
     if (this.form.invalid) return;
     this.salvando.set(true);
-    const { valor, descricao } = this.form.getRawValue();
+    const { valor, descricao, pessoaRetirou } = this.form.getRawValue();
     
-    this.clientesService.lancarFiado(this.data.clienteId, { valor: Number(valor), descricao }).subscribe({
+    this.clientesService.lancarFiado(this.data.clienteId, {
+      valor: Number(valor),
+      descricao,
+      pessoaRetirou: pessoaRetirou || undefined,
+    }).subscribe({
       next: () => this.dialogRef.close(true),
       error: () => {
         this.salvando.set(false);

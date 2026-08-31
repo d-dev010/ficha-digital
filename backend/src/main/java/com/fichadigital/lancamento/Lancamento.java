@@ -49,6 +49,10 @@ public class Lancamento {
     @Column(length = 500)
     private String descricao;
 
+    /** Nome de quem fisicamente retirou o item (pode ser diferente do cliente). Opcional. */
+    @Column(name = "pessoa_retirou", length = 255)
+    private String pessoaRetirou;
+
     @NotNull
     @Column(nullable = false)
     @Builder.Default

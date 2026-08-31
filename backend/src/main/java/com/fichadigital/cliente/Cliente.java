@@ -43,6 +43,8 @@ public class Cliente {
 
     private String telefone;
 
+    private String endereco;
+
     /** CPF opcional. Armazenado completo; mascarado na camada de service ao listar (RNF04). */
     private String cpf;
 

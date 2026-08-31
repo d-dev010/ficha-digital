@@ -11,9 +11,10 @@ public record ClienteDetalhe(
         String nome,
         String telefone,
         String cpf,
+        String endereco,
         BigDecimal saldoDevedor
 ) {
     public static ClienteDetalhe from(Cliente c) {
-        return new ClienteDetalhe(c.getId(), c.getNome(), c.getTelefone(), c.getCpf(), c.getSaldoDevedor());
+        return new ClienteDetalhe(c.getId(), c.getNome(), c.getTelefone(), c.getCpf(), c.getEndereco(), c.getSaldoDevedor());
     }
 }

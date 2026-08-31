@@ -4,13 +4,16 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../../core/auth/auth.service';
 import { Router } from '@angular/router';
+import { NovoFuncionarioDialogComponent } from './novo-funcionario-dialog.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, MatToolbarModule, MatIconModule, MatButtonModule, MatCardModule],
+  imports: [CommonModule, MatToolbarModule, MatIconModule, MatButtonModule, MatCardModule, MatDialogModule, MatSnackBarModule],
   template: `
     <mat-toolbar color="primary" class="toolbar">
       <mat-icon class="toolbar-logo">dashboard</mat-icon>
@@ -26,7 +29,13 @@ import { Router } from '@angular/router';
     </mat-toolbar>
 
     <div class="page-container">
-      <h2 class="title">Visão Geral</h2>
+      <div class="header-actions">
+        <h2 class="title">Visão Geral</h2>
+        <button mat-flat-button color="primary" (click)="abrirNovoFuncionario()" aria-label="Novo Funcionário">
+          <mat-icon>person_add</mat-icon>
+          Novo Funcionário
+        </button>
+      </div>
       <div class="dashboard-grid">
         <mat-card class="dash-card">
           <mat-card-header>
@@ -68,11 +77,17 @@ import { Router } from '@angular/router';
       margin: 0 auto;
       padding: 24px 16px;
     }
+    .header-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
     .title {
       font-size: 24px;
       font-weight: 700;
       color: #1a237e;
-      margin-bottom: 24px;
+      margin-bottom: 0;
     }
     .dashboard-grid {
       display: grid;
@@ -97,13 +112,27 @@ import { Router } from '@angular/router';
   `]
 })
 export class DashboardComponent {
-  constructor(public auth: AuthService, private router: Router) {}
-  
+  constructor(
+    public auth: AuthService,
+    private router: Router,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
+  ) { }
+
   logout() {
     this.auth.logout();
   }
 
   voltar() {
     this.router.navigate(['/clientes']);
+  }
+
+  abrirNovoFuncionario() {
+    const ref = this.dialog.open(NovoFuncionarioDialogComponent, { width: '480px' });
+    ref.afterClosed().subscribe(criado => {
+      if (criado) {
+        this.snackBar.open('Funcionário cadastrado com sucesso!', 'Fechar', { duration: 3000 });
+      }
+    });
   }
 }

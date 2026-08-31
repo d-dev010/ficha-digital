@@ -13,12 +13,14 @@ public record LancamentoResponse(
         String descricao,
         Instant data,
         UUID usuarioId,
-        String nomeUsuario
+        String nomeUsuario,
+        String pessoaRetirou
 ) {
     public static LancamentoResponse from(Lancamento l) {
         return new LancamentoResponse(
                 l.getId(), l.getValor(), l.getDescricao(), l.getData(),
-                l.getUsuario().getId(), l.getUsuario().getNome()
+                l.getUsuario().getId(), l.getUsuario().getNome(),
+                l.getPessoaRetirou()
         );
     }
 }

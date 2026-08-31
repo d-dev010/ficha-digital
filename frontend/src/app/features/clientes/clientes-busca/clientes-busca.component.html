@@ -3,6 +3,13 @@
   <span class="toolbar-title">Ficha Digital</span>
   <span class="spacer"></span>
   <span class="usuario-nome">{{ auth.usuario()?.nome }}</span>
+  
+  @if (auth.perfil() === 'DONO') {
+    <button mat-icon-button (click)="irParaDashboard()" matTooltip="Painel Administrativo" id="btn-admin">
+      <mat-icon>dashboard</mat-icon>
+    </button>
+  }
+
   <button mat-icon-button (click)="logout()" matTooltip="Sair" id="btn-logout">
     <mat-icon>logout</mat-icon>
   </button>

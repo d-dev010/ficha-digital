@@ -1,6 +1,7 @@
 export interface LancarFiadoRequest {
   valor: number;
   descricao: string;
+  pessoaRetirou?: string;
 }
 
 export interface LancamentoResponse {

@@ -46,6 +46,7 @@ public class ClienteService {
                 .nome(request.nome())
                 .telefone(request.telefone())
                 .cpf(request.cpf())
+                .endereco(request.endereco())
                 .build();
 
         return clienteRepository.save(cliente);

@@ -36,10 +36,18 @@ public class JwtService {
     private long expirationMs;
 
     private SecretKey getSigningKey() {
+        // Fail-fast (P1): rejeita secret vazio ou fraco antes de qualquer operação JWT.
+        // Se JWT_SECRET não estiver definida, Spring lança BindException antes de chegar aqui.
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException(
+                    "[SEGURANÇA] jwt.secret não pode ser vazio. Defina a variável JWT_SECRET no ambiente.");
+        }
         byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         // Garante 256 bits mínimos para HMAC-SHA256
         if (keyBytes.length < 32) {
-            throw new IllegalStateException("jwt.secret deve ter ao menos 32 caracteres (256 bits)");
+            throw new IllegalStateException(
+                    "[SEGURANÇA] jwt.secret deve ter ao menos 32 caracteres (256 bits). " +
+                    "Gere um segredo com: openssl rand -hex 64");
         }
         return Keys.hmacShaKeyFor(keyBytes);
     }

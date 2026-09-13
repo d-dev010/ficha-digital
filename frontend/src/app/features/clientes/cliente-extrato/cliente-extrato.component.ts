@@ -14,12 +14,14 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ClientesService } from '../clientes.service';
+import { AuthService } from '../../../core/auth/auth.service';
 import { ClienteDetalhe } from '../../../core/models/cliente.model';
 import { ExtratoItem } from '../../../core/models/pagamento.model';
 import { CurrencyBrPipe } from '../../../shared/pipes/currency-br.pipe';
 import { LancarFiadoDialogComponent } from './lancar-fiado-dialog.component';
 import { RegistrarPagamentoDialogComponent } from './registrar-pagamento-dialog.component';
 import { EditarTelefoneDialogComponent } from './editar-telefone-dialog.component';
+import { ConfirmarExclusaoDialogComponent } from './confirmar-exclusao-dialog.component';
 
 @Component({
   selector: 'app-cliente-extrato',
@@ -43,6 +45,7 @@ export class ClienteExtratoComponent implements OnInit {
     private router: Router,
     private clientesService: ClientesService,
     private dialog: MatDialog,
+    public auth: AuthService,
   ) {}
 
   ngOnInit() {
@@ -99,6 +102,16 @@ export class ClienteExtratoComponent implements OnInit {
         // Update the client state with the new details returned from the backend
         this.cliente.set(editou);
       }
+    });
+  }
+
+  abrirExcluirCliente() {
+    const ref = this.dialog.open(ConfirmarExclusaoDialogComponent, {
+      width: '520px',
+      data: { clienteId: this.clienteId, nomeCliente: this.cliente()?.nome },
+    });
+    ref.afterClosed().subscribe(excluiu => {
+      if (excluiu) this.router.navigate(['/clientes']);
     });
   }
 

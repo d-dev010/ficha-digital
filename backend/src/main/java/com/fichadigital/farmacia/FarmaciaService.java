@@ -1,5 +1,6 @@
 package com.fichadigital.farmacia;
 
+import com.fichadigital.cliente.ClienteRepository;
 import com.fichadigital.usuario.Perfil;
 import com.fichadigital.usuario.Usuario;
 import com.fichadigital.usuario.UsuarioRepository;
@@ -7,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 /**
  * Service de farmácias.
@@ -19,6 +22,7 @@ public class FarmaciaService {
     private final FarmaciaRepository farmaciaRepository;
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ClienteRepository clienteRepository;
 
     /**
      * Cria uma nova farmácia e seu usuário DONO em uma única transação atômica.
@@ -53,5 +57,19 @@ public class FarmaciaService {
         usuarioRepository.save(dono);
 
         return farmacia;
+    }
+
+    /**
+     * Agrega métricas do painel administrativo do DONO (US — painel adm).
+     * Retorna: clientes com saldo devedor > 0 e soma total dos saldos devedores.
+     *
+     * @param farmaciaId UUID da farmácia — extraído do JWT (RNF03)
+     * @return ResumoFarmaciaResponse com clientesAtivos e totalAReceber
+     */
+    @Transactional(readOnly = true)
+    public ResumoFarmaciaResponse resumo(UUID farmaciaId) {
+        long clientesAtivos = clienteRepository.contarClientesAtivos(farmaciaId);
+        java.math.BigDecimal totalAReceber = clienteRepository.somarSaldoDevedor(farmaciaId);
+        return new ResumoFarmaciaResponse(clientesAtivos, totalAReceber);
     }
 }

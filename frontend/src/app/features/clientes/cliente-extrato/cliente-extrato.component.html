@@ -60,6 +60,18 @@
       </button>
     </div>
 
+    @if (auth.perfil() === 'DONO') {
+      <div class="acoes-dono">
+        <button mat-stroked-button class="btn-excluir-cliente" id="btn-excluir-cliente"
+                (click)="abrirExcluirCliente()"
+                matTooltip="Apenas o dono da farmácia pode excluir clientes">
+          <mat-icon>delete_forever</mat-icon>
+          Excluir Cliente
+        </button>
+      </div>
+    }
+
+
     <!-- Histórico -->
     <h3 class="historico-titulo">Histórico de movimentações</h3>
 

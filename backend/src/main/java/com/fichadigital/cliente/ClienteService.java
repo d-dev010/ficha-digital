@@ -100,6 +100,21 @@ public class ClienteService {
         return ClienteDetalhe.from(clienteRepository.save(cliente));
     }
 
+    /**
+     * Exclui permanentemente um cliente da farmácia (restrito ao DONO — US apagar cliente).
+     * Lançamentos e pagamentos são removidos em cascata pelo banco (ON DELETE CASCADE).
+     *
+     * @param farmaciaId UUID da farmácia — extraído do JWT (RNF03)
+     * @param clienteId  UUID do cliente a excluir
+     * @throws EntityNotFoundException se o cliente não pertencer à farmácia
+     */
+    @Transactional
+    public void excluir(UUID farmaciaId, UUID clienteId) {
+        Cliente cliente = clienteRepository.findByIdAndFarmaciaId(clienteId, farmaciaId)
+                .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado"));
+        clienteRepository.delete(cliente);
+    }
+
 
     /**
      * Mascara o CPF para listagens: "123.456.789-00" → "123.***.**\*-00" (RNF04).

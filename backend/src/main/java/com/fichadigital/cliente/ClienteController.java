@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -19,6 +20,7 @@ import java.util.UUID;
  * POST   /clientes           — cadastrar cliente (US03)
  * GET    /clientes?busca=    — busca por nome/telefone/CPF (US04)
  * GET    /clientes/{id}      — detalhe do cliente (US03)
+ * DELETE /clientes/{id}      — excluir cliente (restrito ao DONO)
  *
  * farmaciaId sempre do JWT via SecurityUtils (RNF03).
  */
@@ -81,7 +83,7 @@ public class ClienteController {
     /**
      * PATCH /clientes/{id}/telefone
      * Atualiza (ou remove) o telefone do cliente.
-     * farmaciaId do JWT — nunca do body (RNF03).
+     * farmáciaId do JWT — nunca do body (RNF03).
      *
      * @return ClienteDetalhe atualizado ou 404 se não encontrado.
      */
@@ -91,6 +93,21 @@ public class ClienteController {
             @RequestBody AtualizarTelefoneRequest request) {
         UUID farmaciaId = SecurityUtils.farmaciaId(); // RNF03
         return ResponseEntity.ok(clienteService.atualizarTelefone(farmaciaId, id, request));
+    }
+
+    /**
+     * DELETE /clientes/{id}
+     * Exclui permanentemente o cliente e todo o seu histórico (cascade pelo banco).
+     * Restrito ao perfil DONO (RNF03 — isolamento multi-tenant + autorização).
+     *
+     * @return 204 No Content em caso de sucesso, 403 se não for DONO, 404 se não encontrado.
+     */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('DONO')")
+    public ResponseEntity<Void> excluir(@PathVariable UUID id) {
+        UUID farmaciaId = SecurityUtils.farmaciaId(); // RNF03
+        clienteService.excluir(farmaciaId, id);
+        return ResponseEntity.noContent().build();
     }
 }
 

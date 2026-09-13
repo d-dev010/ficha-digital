@@ -46,4 +46,18 @@ public interface ClienteRepository extends JpaRepository<Cliente, UUID> {
      */
     @Query("SELECT c FROM Cliente c WHERE c.id = :id AND c.farmacia.id = :farmaciaId")
     Optional<Cliente> findByIdAndFarmaciaId(@Param("id") UUID id, @Param("farmaciaId") UUID farmaciaId);
+
+    /**
+     * Conta clientes com saldo devedor > 0 (clientes ativos) para o painel do DONO.
+     * Filtrado por farmácia — RNF03.
+     */
+    @Query("SELECT COUNT(c) FROM Cliente c WHERE c.farmacia.id = :farmaciaId AND c.saldoDevedor > 0")
+    long contarClientesAtivos(@Param("farmaciaId") UUID farmaciaId);
+
+    /**
+     * Soma o saldo devedor total de todos os clientes da farmácia (total a receber).
+     * Retorna 0 se não houver clientes. Filtrado por farmácia — RNF03.
+     */
+    @Query("SELECT COALESCE(SUM(c.saldoDevedor), 0) FROM Cliente c WHERE c.farmacia.id = :farmaciaId")
+    java.math.BigDecimal somarSaldoDevedor(@Param("farmaciaId") UUID farmaciaId);
 }

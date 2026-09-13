@@ -1,0 +1,4 @@
+opção de apagar cliente com confirmação
+recuperação de senha por email
+saldo e clientes ativos
+opção de usar pelo celular

@@ -47,6 +47,10 @@ export class ClientesService {
     );
   }
 
+  excluir(clienteId: string): Observable<void> {
+    return this.http.delete<void>(`${API_URL}/clientes/${clienteId}`);
+  }
+
   extrato(clienteId: string, page = 0, size = 50): Observable<Page<ExtratoItem>> {
     const params = new HttpParams().set('page', page).set('size', size);
     return this.http.get<Page<ExtratoItem>>(

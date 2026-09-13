@@ -17,11 +17,20 @@ export interface UsuarioResponse {
   perfil: string;
 }
 
+export interface ResumoFarmacia {
+  clientesAtivos: number;
+  totalAReceber: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class FuncionariosService {
   constructor(private http: HttpClient) {}
 
   cadastrar(request: CadastrarFuncionarioRequest): Observable<UsuarioResponse> {
     return this.http.post<UsuarioResponse>(`${API_URL}/usuarios`, request);
+  }
+
+  resumo(): Observable<ResumoFarmacia> {
+    return this.http.get<ResumoFarmacia>(`${API_URL}/farmacias/resumo`);
   }
 }

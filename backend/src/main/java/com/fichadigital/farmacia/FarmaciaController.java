@@ -1,9 +1,11 @@
 package com.fichadigital.farmacia;
 
+import com.fichadigital.security.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -30,6 +32,20 @@ public class FarmaciaController {
         Farmacia farmacia = farmaciaService.criarFarmaciaComDono(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new FarmaciaResponse(farmacia.getId(), farmacia.getNome(), farmacia.getCnpj()));
+    }
+
+    /**
+     * GET /farmacias/resumo
+     * Retorna métricas do painel administrativo: clientes ativos e total a receber.
+     * Restrito ao perfil DONO. farmaciaId do JWT — nunca do body (RNF03).
+     *
+     * @return ResumoFarmaciaResponse com clientesAtivos e totalAReceber
+     */
+    @GetMapping("/resumo")
+    @PreAuthorize("hasRole('DONO')")
+    public ResponseEntity<ResumoFarmaciaResponse> resumo() {
+        UUID farmaciaId = SecurityUtils.farmaciaId(); // RNF03
+        return ResponseEntity.ok(farmaciaService.resumo(farmaciaId));
     }
 
     /**

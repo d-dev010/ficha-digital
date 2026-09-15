@@ -72,8 +72,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // Permite o servidor de desenvolvimento Angular e produção (ajuste conforme necessário)
-        config.setAllowedOriginPatterns(List.of("http://localhost:4200", "http://localhost:*"));
+        // Permite localhost e domínios Vercel (onde o frontend ficará hospedado)
+        config.setAllowedOriginPatterns(List.of(
+            "http://localhost:4200", 
+            "http://localhost:*", 
+            "https://*.vercel.app"
+        ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

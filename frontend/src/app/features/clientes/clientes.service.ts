@@ -7,7 +7,9 @@ import {
 import { LancarFiadoRequest, LancamentoResponse } from '../../core/models/lancamento.model';
 import { RegistrarPagamentoRequest, PagamentoResponse, ExtratoItem } from '../../core/models/pagamento.model';
 
-const API_URL = 'http://localhost:8080';
+import { environment } from '../../../environments/environment';
+
+const API_URL = environment.apiUrl;
 
 @Injectable({ providedIn: 'root' })
 export class ClientesService {

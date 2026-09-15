@@ -4,8 +4,10 @@ import { Router } from '@angular/router';
 import { tap } from 'rxjs/operators';
 import { TokenResponse, UsuarioAutenticado } from '../models/usuario.model';
 
+import { environment } from '../../../environments/environment';
+
 const TOKEN_KEY = 'fd_token';
-const API_URL = 'http://localhost:8080';
+const API_URL = environment.apiUrl;
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {

@@ -43,7 +43,10 @@ export class LoginComponent {
 
     const { email, senha } = this.form.getRawValue();
     this.auth.login(email, senha).subscribe({
-      next: () => this.router.navigate(['/clientes']),
+      next: (resp) => {
+        const destino = resp.perfil === 'SUPER_ADMIN' ? '/admin' : '/clientes';
+        this.router.navigate([destino]);
+      },
       error: (err) => {
         this.carregando.set(false);
         if (err.status === 401) {

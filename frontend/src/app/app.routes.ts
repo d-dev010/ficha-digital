@@ -9,6 +9,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/login/login.component').then(m => m.LoginComponent)
   },
   {
+    path: 'admin',
+    canActivate: [authGuard, roleGuard('SUPER_ADMIN')],
+    loadComponent: () => import('./features/admin/admin.component').then(m => m.AdminComponent)
+  },
+  {
     path: 'clientes',
     canActivate: [authGuard],
     children: [
@@ -29,3 +34,4 @@ export const routes: Routes = [
   },
   { path: '**', redirectTo: 'clientes' }
 ];
+

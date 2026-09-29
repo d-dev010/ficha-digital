@@ -1,0 +1,325 @@
+<div class="admin-layout">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────── -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">💊</span>
+      <span class="logo-text">Ficha Digital</span>
+      <span class="admin-badge">Admin</span>
+    </div>
+
+    <div class="sidebar-stats">
+      <div class="stat-card">
+        <span class="stat-value">{{ totalFarmacias() }}</span>
+        <span class="stat-label">Farmácias</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ totalUsuarios() }}</span>
+        <span class="stat-label">Usuários</span>
+      </div>
+      <div class="stat-card accent">
+        <span class="stat-value">{{ totalAtivos() }}</span>
+        <span class="stat-label">Ativos</span>
+      </div>
+    </div>
+
+    <div class="sidebar-user">
+      <span class="material-icons">account_circle</span>
+      <div class="user-info">
+        <span class="user-name">{{ authService.usuario()?.nome }}</span>
+        <span class="user-role">Super Admin</span>
+      </div>
+    </div>
+
+    <button class="logout-btn" (click)="logout()">
+      <span class="material-icons">logout</span>
+      Sair
+    </button>
+  </aside>
+
+  <!-- ── Main Content ─────────────────────────────────────────── -->
+  <main class="admin-main">
+
+    <header class="admin-header">
+      <h1>Painel Administrativo</h1>
+      <p>Gerencie todas as farmácias e usuários do sistema.</p>
+    </header>
+
+    @if (carregando()) {
+      <div class="loading-overlay">
+        <mat-spinner diameter="48"></mat-spinner>
+      </div>
+    }
+
+    <mat-tab-group animationDuration="200ms" class="admin-tabs">
+
+      <!-- ══ ABA: FARMÁCIAS ════════════════════════════════════ -->
+      <mat-tab label="🏪  Farmácias">
+        <div class="tab-content">
+
+          <div class="section-header">
+            <h2>Farmácias cadastradas</h2>
+            <button mat-raised-button color="primary" id="btn-nova-farmacia"
+                    (click)="mostrarFormFarmacia.set(!mostrarFormFarmacia())">
+              <mat-icon>add</mat-icon>
+              Nova Farmácia
+            </button>
+          </div>
+
+          <!-- Form criar farmácia -->
+          @if (mostrarFormFarmacia()) {
+            <mat-card class="form-card">
+              <mat-card-title>Nova farmácia + Dono</mat-card-title>
+              <mat-card-content>
+                <form [formGroup]="formFarmacia" (ngSubmit)="salvarFarmacia()" class="form-grid">
+                  <mat-form-field>
+                    <mat-label>Nome da Farmácia</mat-label>
+                    <input matInput formControlName="nomeFarmacia" id="input-nome-farmacia">
+                  </mat-form-field>
+                  <mat-form-field>
+                    <mat-label>CNPJ (somente números)</mat-label>
+                    <input matInput formControlName="cnpj" maxlength="14" id="input-cnpj-farmacia">
+                  </mat-form-field>
+                  <mat-form-field>
+                    <mat-label>Nome do Dono</mat-label>
+                    <input matInput formControlName="nomeDono" id="input-nome-dono">
+                  </mat-form-field>
+                  <mat-form-field>
+                    <mat-label>E-mail do Dono</mat-label>
+                    <input matInput formControlName="emailDono" type="email" id="input-email-dono">
+                  </mat-form-field>
+                  <mat-form-field class="span-2">
+                    <mat-label>Senha do Dono (mín. 8 caracteres)</mat-label>
+                    <input matInput formControlName="senhaDono" type="password" id="input-senha-dono">
+                  </mat-form-field>
+                  <div class="form-actions span-2">
+                    <button mat-button type="button" (click)="mostrarFormFarmacia.set(false)">Cancelar</button>
+                    <button mat-raised-button color="primary" type="submit"
+                            [disabled]="formFarmacia.invalid" id="btn-salvar-farmacia">
+                      Criar Farmácia
+                    </button>
+                  </div>
+                </form>
+              </mat-card-content>
+            </mat-card>
+          }
+
+          <!-- Tabela farmácias -->
+          <div class="table-wrapper">
+            <table mat-table [dataSource]="farmacias()" class="admin-table">
+
+              <ng-container matColumnDef="nome">
+                <th mat-header-cell *matHeaderCellDef>Farmácia</th>
+                <td mat-cell *matCellDef="let f">
+                  <span class="farm-name">{{ f.nome }}</span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="cnpj">
+                <th mat-header-cell *matHeaderCellDef>CNPJ</th>
+                <td mat-cell *matCellDef="let f">{{ f.cnpj || '—' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="totalUsuarios">
+                <th mat-header-cell *matHeaderCellDef>Usuários</th>
+                <td mat-cell *matCellDef="let f">
+                  <span class="badge">{{ f.totalUsuarios }}</span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="acoes">
+                <th mat-header-cell *matHeaderCellDef>Ações</th>
+                <td mat-cell *matCellDef="let f">
+                  <button mat-icon-button color="primary"
+                          matTooltip="Ver usuários desta farmácia"
+                          (click)="filtrarPorFarmacia(f.id)">
+                    <mat-icon>people</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn"
+                          matTooltip="Excluir farmácia"
+                          (click)="excluirFarmacia(f)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasFarmacias"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasFarmacias;"></tr>
+            </table>
+
+            @if (farmacias().length === 0 && !carregando()) {
+              <div class="empty-state">
+                <mat-icon>store_off</mat-icon>
+                <p>Nenhuma farmácia cadastrada.</p>
+              </div>
+            }
+          </div>
+
+        </div>
+      </mat-tab>
+
+      <!-- ══ ABA: USUÁRIOS ════════════════════════════════════ -->
+      <mat-tab label="👥  Usuários">
+        <div class="tab-content">
+
+          <div class="section-header">
+            <div class="section-header-left">
+              <h2>Usuários</h2>
+              @if (farmaciaFiltro()) {
+                <span class="filtro-chip">
+                  {{ getNomeFarmacia(farmaciaFiltro()!) }}
+                  <button mat-icon-button (click)="filtrarPorFarmacia(null)" class="chip-close">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </span>
+              }
+            </div>
+            <button mat-raised-button color="primary" id="btn-novo-usuario"
+                    (click)="mostrarFormUsuario.set(!mostrarFormUsuario())">
+              <mat-icon>person_add</mat-icon>
+              Novo Usuário
+            </button>
+          </div>
+
+          <!-- Form criar usuário -->
+          @if (mostrarFormUsuario()) {
+            <mat-card class="form-card">
+              <mat-card-title>Novo usuário</mat-card-title>
+              <mat-card-content>
+                <form [formGroup]="formUsuario" (ngSubmit)="salvarUsuario()" class="form-grid">
+                  <mat-form-field>
+                    <mat-label>Nome completo</mat-label>
+                    <input matInput formControlName="nome" id="input-nome-usuario">
+                  </mat-form-field>
+                  <mat-form-field>
+                    <mat-label>E-mail</mat-label>
+                    <input matInput formControlName="email" type="email" id="input-email-usuario">
+                  </mat-form-field>
+                  <mat-form-field>
+                    <mat-label>Senha (mín. 8 caracteres)</mat-label>
+                    <input matInput formControlName="senha" type="password" id="input-senha-usuario">
+                  </mat-form-field>
+                  <mat-form-field>
+                    <mat-label>Perfil</mat-label>
+                    <mat-select formControlName="perfil" id="select-perfil-usuario">
+                      <mat-option value="DONO">Dono</mat-option>
+                      <mat-option value="ATENDENTE">Atendente</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field class="span-2">
+                    <mat-label>Farmácia</mat-label>
+                    <mat-select formControlName="farmaciaId" id="select-farmacia-usuario">
+                      @for (f of farmacias(); track f.id) {
+                        <mat-option [value]="f.id">{{ f.nome }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                  <div class="form-actions span-2">
+                    <button mat-button type="button" (click)="mostrarFormUsuario.set(false)">Cancelar</button>
+                    <button mat-raised-button color="primary" type="submit"
+                            [disabled]="formUsuario.invalid" id="btn-salvar-usuario">
+                      Criar Usuário
+                    </button>
+                  </div>
+                </form>
+              </mat-card-content>
+            </mat-card>
+          }
+
+          <!-- Tabela usuários -->
+          <div class="table-wrapper">
+            <table mat-table [dataSource]="usuarios()" class="admin-table">
+
+              <ng-container matColumnDef="nome">
+                <th mat-header-cell *matHeaderCellDef>Nome</th>
+                <td mat-cell *matCellDef="let u">
+                  <div class="user-cell">
+                    <span class="material-icons user-avatar">account_circle</span>
+                    {{ u.nome }}
+                  </div>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="email">
+                <th mat-header-cell *matHeaderCellDef>E-mail</th>
+                <td mat-cell *matCellDef="let u">{{ u.email }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="perfil">
+                <th mat-header-cell *matHeaderCellDef>Perfil</th>
+                <td mat-cell *matCellDef="let u">
+                  <span class="perfil-chip" [class]="'perfil-' + u.perfil.toLowerCase()">
+                    {{ perfilLabel(u.perfil) }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="farmacia">
+                <th mat-header-cell *matHeaderCellDef>Farmácia</th>
+                <td mat-cell *matCellDef="let u">{{ u.farmaciaNome || '—' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let u">
+                  <span class="status-chip" [class.ativo]="u.ativo" [class.inativo]="!u.ativo">
+                    {{ u.ativo ? 'Ativo' : 'Inativo' }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="acoes">
+                <th mat-header-cell *matHeaderCellDef>Ações</th>
+                <td mat-cell *matCellDef="let u">
+                  <button mat-icon-button
+                          [color]="u.ativo ? 'warn' : 'primary'"
+                          [matTooltip]="u.ativo ? 'Desativar usuário' : 'Ativar usuário'"
+                          (click)="toggleStatus(u)">
+                    <mat-icon>{{ u.ativo ? 'person_off' : 'person' }}</mat-icon>
+                  </button>
+                  <button mat-icon-button color="accent"
+                          matTooltip="Alterar senha"
+                          (click)="alterandoSenhaId.set(alterandoSenhaId() === u.id ? null : u.id)">
+                    <mat-icon>key</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn"
+                          matTooltip="Excluir usuário"
+                          (click)="excluirUsuario(u)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+
+                  <!-- Inline form de senha -->
+                  @if (alterandoSenhaId() === u.id) {
+                    <form [formGroup]="formSenha" (ngSubmit)="salvarSenha(u.id)" class="inline-senha-form">
+                      <mat-form-field appearance="outline" class="senha-field">
+                        <mat-label>Nova senha</mat-label>
+                        <input matInput formControlName="novaSenha" type="password"
+                               [id]="'input-nova-senha-' + u.id">
+                      </mat-form-field>
+                      <button mat-mini-fab color="primary" type="submit"
+                              [disabled]="formSenha.invalid">
+                        <mat-icon>check</mat-icon>
+                      </button>
+                    </form>
+                  }
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasUsuarios"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasUsuarios;"></tr>
+            </table>
+
+            @if (usuarios().length === 0 && !carregando()) {
+              <div class="empty-state">
+                <mat-icon>group_off</mat-icon>
+                <p>Nenhum usuário encontrado.</p>
+              </div>
+            }
+          </div>
+
+        </div>
+      </mat-tab>
+
+    </mat-tab-group>
+  </main>
+</div>

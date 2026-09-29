@@ -33,8 +33,12 @@ public class Usuario implements UserDetails {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "farmacia_id", nullable = false)
+    /**
+     * Farmácia à qual o usuário pertence.
+     * Nullable apenas para o perfil SUPER_ADMIN, que tem visão global sem tenant.
+     */
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "farmacia_id", nullable = true)
     private Farmacia farmacia;
 
     @NotBlank

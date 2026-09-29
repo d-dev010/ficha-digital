@@ -53,6 +53,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Rotas públicas (registro e login)
+                        .requestMatchers(HttpMethod.GET, "/").permitAll()
                         .requestMatchers(HttpMethod.POST, "/farmacias").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         // Swagger UI
@@ -61,6 +62,8 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+                        // Rotas exclusivas do SUPER_ADMIN
+                        .requestMatchers("/admin/**").hasRole("SUPER_ADMIN")
                         // Tudo mais requer autenticação
                         .anyRequest().authenticated()
                 )
@@ -72,11 +75,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // Permite localhost e domínios Vercel (onde o frontend ficará hospedado)
+        // Permite localhost, Vercel e Render (onde o frontend/backend ficará hospedado)
         config.setAllowedOriginPatterns(List.of(
             "http://localhost:4200", 
             "http://localhost:*", 
-            "https://*.vercel.app"
+            "https://*.vercel.app",
+            "https://*.onrender.com"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));

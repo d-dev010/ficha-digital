@@ -6,53 +6,59 @@ import com.fichadigital.usuario.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Cria o Super Admin inicial automaticamente se não existir.
- * Substitui a inserção via Flyway, pois o pgBouncer no Neon bloqueia session vars na JDBC URL.
+ * Cria/atualiza o Super Admin na inicialização da aplicação.
+ * O hash é gerado pelo próprio Spring BCrypt — não depende de variável externa com hash pré-calculado.
  */
 @Component
 @RequiredArgsConstructor
 public class AdminInitializer implements CommandLineRunner {
 
     private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Value("${ADMIN_EMAIL:admin@fichadigital.com}")
     private String adminEmail;
 
-    @Value("${ADMIN_PASSWORD_HASH:$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy}")
-    private String adminPasswordHash;
+    // Senha em texto puro — o Spring vai transformar em BCrypt na hora
+    @Value("${ADMIN_PASSWORD:admin123}")
+    private String adminPassword;
 
     @Override
     @Transactional
     public void run(String... args) {
         try {
+            // Gera o hash BCrypt diretamente, sem depender de variável externa com hash pré-calculado
+            String hash = passwordEncoder.encode(adminPassword);
+
             Usuario admin = usuarioRepository.findByEmail(adminEmail).orElse(null);
 
             if (admin == null) {
-                // Cria se não existir
+                // Cria novo Super Admin
                 admin = Usuario.builder()
-                        .farmacia(null) // SUPER_ADMIN não tem farmácia
+                        .farmacia(null)
                         .nome("Super Admin")
                         .email(adminEmail)
-                        .senhaHash(adminPasswordHash)
+                        .senhaHash(hash)
                         .perfil(Perfil.SUPER_ADMIN)
                         .ativo(true)
                         .build();
                 usuarioRepository.save(admin);
-                System.out.println("Super Admin criado com sucesso: " + adminEmail);
+                System.out.println("[AdminInitializer] Super Admin CRIADO: " + adminEmail);
             } else {
-                // Força atualização da senha se já existir (Self-healing)
-                admin.setSenhaHash(adminPasswordHash);
+                // Atualiza senha e garante perfil correto (self-healing)
+                admin.setSenhaHash(hash);
                 admin.setPerfil(Perfil.SUPER_ADMIN);
                 admin.setAtivo(true);
                 usuarioRepository.save(admin);
-                System.out.println("Super Admin atualizado com sucesso: " + adminEmail);
+                System.out.println("[AdminInitializer] Super Admin ATUALIZADO: " + adminEmail);
             }
         } catch (Exception e) {
-            System.out.println("Erro ao inicializar admin (pode ser concorrência): " + e.getMessage());
+            System.err.println("[AdminInitializer] Erro: " + e.getMessage());
         }
     }
 }

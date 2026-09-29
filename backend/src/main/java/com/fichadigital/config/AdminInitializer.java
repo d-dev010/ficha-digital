@@ -29,8 +29,11 @@ public class AdminInitializer implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         try {
-            if (!usuarioRepository.existsByEmail(adminEmail)) {
-                Usuario admin = Usuario.builder()
+            Usuario admin = usuarioRepository.findByEmail(adminEmail).orElse(null);
+
+            if (admin == null) {
+                // Cria se não existir
+                admin = Usuario.builder()
                         .farmacia(null) // SUPER_ADMIN não tem farmácia
                         .nome("Super Admin")
                         .email(adminEmail)
@@ -38,15 +41,18 @@ public class AdminInitializer implements CommandLineRunner {
                         .perfil(Perfil.SUPER_ADMIN)
                         .ativo(true)
                         .build();
-
                 usuarioRepository.save(admin);
                 System.out.println("Super Admin criado com sucesso: " + adminEmail);
+            } else {
+                // Força atualização da senha se já existir (Self-healing)
+                admin.setSenhaHash(adminPasswordHash);
+                admin.setPerfil(Perfil.SUPER_ADMIN);
+                admin.setAtivo(true);
+                usuarioRepository.save(admin);
+                System.out.println("Super Admin atualizado com sucesso: " + adminEmail);
             }
-        } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            // Se duas instâncias subirem exatamente no mesmo milissegundo e tentarem criar o admin juntas,
-            // o banco de dados vai bloquear a segunda (por causa do e-mail único).
-            // Nós apenas ignoramos o erro, pois significa que o admin já foi criado.
-            System.out.println("Admin já foi criado por outra instância concorrente.");
+        } catch (Exception e) {
+            System.out.println("Erro ao inicializar admin (pode ser concorrência): " + e.getMessage());
         }
     }
 }

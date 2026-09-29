@@ -59,7 +59,7 @@ public class Usuario implements UserDetails {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 10)
+    @Column(nullable = false, length = 15)
     private Perfil perfil;
 
     /**

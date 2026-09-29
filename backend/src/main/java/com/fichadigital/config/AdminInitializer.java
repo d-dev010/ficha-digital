@@ -32,6 +32,13 @@ public class AdminInitializer implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         try {
+            // Debug: confirma quais variáveis estão sendo lidas
+            String senhaPreview = adminPassword != null && adminPassword.length() >= 3
+                    ? adminPassword.substring(0, 3) + "***"
+                    : "(vazia ou nula)";
+            System.out.println("[AdminInitializer] Email lido: " + adminEmail);
+            System.out.println("[AdminInitializer] Senha começa com: " + senhaPreview);
+
             // Gera o hash BCrypt diretamente, sem depender de variável externa com hash pré-calculado
             String hash = passwordEncoder.encode(adminPassword);
 

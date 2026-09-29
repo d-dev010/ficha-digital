@@ -65,12 +65,17 @@ public class AuthService {
 
         String token = jwtService.gerarToken(usuario);
 
+        // SUPER_ADMIN não tem farmácia — farmaciaId será null no token
+        java.util.UUID farmaciaId = usuario.getFarmacia() != null
+                ? usuario.getFarmacia().getId()
+                : null;
+
         return new TokenResponse(
                 token,
                 usuario.getId(),
                 usuario.getNome(),
                 usuario.getPerfil(),
-                usuario.getFarmacia().getId()
+                farmaciaId
         );
     }
 }

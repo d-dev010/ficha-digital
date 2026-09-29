@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ficha_digital}?options=-c%20app.admin_email%3D${ADMIN_EMAIL:admin@fichadigital.com}%20-c%20app.admin_password_hash%3D${ADMIN_PASSWORD_HASH:$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ficha_digital}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -27,6 +27,7 @@ logging:
   level:
     com.fichadigital: INFO
     org.springframework.security: WARN
+
 
 # Swagger/OpenAPI: disponível apenas no profile 'dev' (localhost).
 # Em produção (Render), springdoc.api-docs.enabled=false é setado via env var.

@@ -62,9 +62,11 @@ public class JwtService {
         Date agora = new Date();
         Date expiracao = new Date(agora.getTime() + expirationMs);
 
+        String farmaciaIdStr = usuario.getFarmacia() != null ? usuario.getFarmacia().getId().toString() : null;
+
         return Jwts.builder()
                 .subject(usuario.getId().toString())
-                .claim(CLAIM_FARMACIA_ID, usuario.getFarmacia().getId().toString())
+                .claim(CLAIM_FARMACIA_ID, farmaciaIdStr)
                 .claim(CLAIM_PERFIL, usuario.getPerfil().name())
                 .issuedAt(agora)
                 .expiration(expiracao)
@@ -85,7 +87,7 @@ public class JwtService {
      */
     public UUID extrairFarmaciaId(String token) {
         String farmaciaIdStr = extrairClaims(token).get(CLAIM_FARMACIA_ID, String.class);
-        return UUID.fromString(farmaciaIdStr);
+        return farmaciaIdStr != null ? UUID.fromString(farmaciaIdStr) : null;
     }
 
     /**

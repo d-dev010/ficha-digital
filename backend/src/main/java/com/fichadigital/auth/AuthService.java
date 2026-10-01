@@ -3,20 +3,21 @@ package com.fichadigital.auth;
 import com.fichadigital.security.JwtService;
 import com.fichadigital.usuario.Usuario;
 import com.fichadigital.usuario.UsuarioRepository;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Refill;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.Refill;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Service de autenticação.
@@ -31,11 +32,20 @@ public class AuthService {
     private final UsuarioRepository usuarioRepository;
     private final JwtService jwtService;
 
-    // Cache simples de rate limiting por e-mail (Problema M3)
-    private final Map<String, Bucket> loginBuckets = new ConcurrentHashMap<>();
+    /**
+     * Cache de buckets de Rate Limiting por e-mail com TTL de 1 hora.
+     *
+     * Troca o ConcurrentHashMap sem expiração por Caffeine com eviction automática:
+     * e-mails inativos por 1h são removidos da memória, prevenindo DoS por esgotamento de RAM
+     * (um atacante não pode mais encher o mapa com infinitos e-mails aleatórios).
+     */
+    private final Cache<String, Bucket> loginBuckets = Caffeine.newBuilder()
+            .expireAfterAccess(1, TimeUnit.HOURS)
+            .maximumSize(100_000) // teto de segurança adicional
+            .build();
 
     private Bucket resolveBucket(String email) {
-        return loginBuckets.computeIfAbsent(email, k -> {
+        return loginBuckets.get(email, k -> {
             Refill refill = Refill.intervally(5, Duration.ofMinutes(5));
             Bandwidth limit = Bandwidth.classic(5, refill);
             return Bucket.builder().addLimit(limit).build();

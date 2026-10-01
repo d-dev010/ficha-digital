@@ -25,6 +25,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import org.springframework.beans.factory.annotation.Value;
 import java.util.List;
 
 /**
@@ -43,6 +44,14 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final UsuarioRepository usuarioRepository;
+
+    /**
+     * URL exata do frontend em produção.
+     * Configure a env var CORS_ALLOWED_ORIGIN no Render com a URL do seu frontend.
+     * Exemplo: https://ficha-digital-4c6d.onrender.com
+     */
+    @Value("${CORS_ALLOWED_ORIGIN:http://localhost:4200}")
+    private String corsAllowedOrigin;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -72,15 +81,21 @@ public class SecurityConfig {
                 .build();
     }
 
+    /**
+     * CORS — origens explicitamente permitidas (sem curingas em produção).
+     *
+     * Em desenvolvimento: http://localhost:4200
+     * Em produção: configurado via env var CORS_ALLOWED_ORIGIN (ex: https://ficha-digital-4c6d.onrender.com)
+     *
+     * Curingas como "https://*.vercel.app" foram removidos — com allowCredentials=true, qualquer
+     * site naquele domínio poderia fazer requests autenticados para a API (CORS misconfiguration).
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // Permite localhost, Vercel e Render (onde o frontend/backend ficará hospedado)
-        config.setAllowedOriginPatterns(List.of(
-            "http://localhost:4200", 
-            "http://localhost:*", 
-            "https://*.vercel.app",
-            "https://*.onrender.com"
+        config.setAllowedOrigins(List.of(
+            "http://localhost:4200",
+            corsAllowedOrigin  // URL exata do frontend em produção (env var CORS_ALLOWED_ORIGIN)
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));

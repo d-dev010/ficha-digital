@@ -24,8 +24,10 @@ public class AdminInitializer implements CommandLineRunner {
     @Value("${ADMIN_EMAIL:admin@fichadigital.com}")
     private String adminEmail;
 
-    // Senha em texto puro — o Spring vai transformar em BCrypt na hora
-    @Value("${ADMIN_PASSWORD:admin123}")
+    // Senha em texto puro — o Spring vai transformar em BCrypt na hora.
+    // SEM fallback intencional: se a variável não estiver definida em produção,
+    // o Spring falhará no boot (fail-fast), evitando senhas padrão expostas.
+    @Value("${ADMIN_PASSWORD}")
     private String adminPassword;
 
     @Override

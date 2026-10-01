@@ -102,6 +102,13 @@
             <version>8.10.1</version>
         </dependency>
 
+        <!-- Cache com TTL para o Rate Limiter (Problema M3 — fix DoS/Memory Leak) -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <!-- versão gerenciada pelo Spring Boot BOM -->
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

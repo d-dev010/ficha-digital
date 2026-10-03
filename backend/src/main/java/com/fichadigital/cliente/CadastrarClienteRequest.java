@@ -1,5 +1,6 @@
 package com.fichadigital.cliente;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 
 /**
@@ -15,5 +16,8 @@ public record CadastrarClienteRequest(
         String cpf,
 
         /** Endereço do cliente. Opcional. */
-        String endereco
+        String endereco,
+
+        @AssertTrue(message = "O consentimento LGPD é obrigatório")
+        Boolean consentimentoLgpd
 ) {}

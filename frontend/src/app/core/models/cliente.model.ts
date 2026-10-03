@@ -21,6 +21,7 @@ export interface CadastrarClienteRequest {
   telefone?: string;
   cpf?: string;
   endereco?: string;
+  consentimentoLgpd?: boolean;
 }
 
 // Resposta paginada do Spring

@@ -31,11 +31,8 @@ import { ClientesService } from '../clientes.service';
       <div class="warning-box">
         <mat-icon class="warning-box-icon">info</mat-icon>
         <div class="warning-box-text">
-          <strong>Esta ação é irreversível e permanente.</strong>
-          <p>Todo o histórico de fiados e pagamentos de
-            <strong class="nome-destaque">{{ data.nomeCliente }}</strong>
-            será excluído para sempre.
-          </p>
+          <strong>Esta ação apagará os dados pessoais.</strong>
+          <p>Para cumprir a LGPD, os dados de <strong class="nome-destaque">{{ data.nomeCliente }}</strong> (Nome, CPF, Telefone) serão <b>anonimizados</b>. O histórico financeiro será mantido de forma anônima e irreversível.</p>
         </div>
       </div>
 

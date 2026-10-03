@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 /**
@@ -65,4 +66,15 @@ public class Cliente {
     @Column(name = "saldo_devedor", nullable = false, precision = 10, scale = 2)
     @Builder.Default
     private BigDecimal saldoDevedor = BigDecimal.ZERO;
+
+    @Column(name = "consentimento_lgpd", nullable = false)
+    @Builder.Default
+    private boolean consentimentoLgpd = false;
+
+    @Column(name = "data_consentimento")
+    private Instant dataConsentimento;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean anonimizado = false;
 }

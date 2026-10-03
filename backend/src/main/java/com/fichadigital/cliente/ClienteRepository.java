@@ -32,6 +32,7 @@ public interface ClienteRepository extends JpaRepository<Cliente, UUID> {
     @Query("""
             SELECT c FROM Cliente c
             WHERE c.farmacia.id = :farmaciaId
+              AND c.anonimizado = false
               AND (
                     LOWER(c.nome) LIKE LOWER(CONCAT('%', :termo, '%'))
                  OR c.telefone LIKE CONCAT('%', :termo, '%')

@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -47,6 +48,8 @@ public class ClienteService {
                 .telefone(request.telefone())
                 .cpf(request.cpf())
                 .endereco(request.endereco())
+                .consentimentoLgpd(request.consentimentoLgpd() != null && request.consentimentoLgpd())
+                .dataConsentimento(Instant.now())
                 .build();
 
         return clienteRepository.save(cliente);
@@ -112,7 +115,15 @@ public class ClienteService {
     public void excluir(UUID farmaciaId, UUID clienteId) {
         Cliente cliente = clienteRepository.findByIdAndFarmaciaId(clienteId, farmaciaId)
                 .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado"));
-        clienteRepository.delete(cliente);
+        
+        // Em vez de hard delete, fazemos a anonimização (LGPD)
+        cliente.setNome("Cliente Anonimizado");
+        cliente.setCpf(null);
+        cliente.setTelefone(null);
+        cliente.setEndereco(null);
+        cliente.setAnonimizado(true);
+        
+        clienteRepository.save(cliente);
     }
 
 

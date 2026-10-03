@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ClientesService } from '../clientes.service';
 import { InputMaskDirective } from '../../../shared/directives/input-mask.directive';
 
@@ -16,7 +17,7 @@ import { InputMaskDirective } from '../../../shared/directives/input-mask.direct
   imports: [
     CommonModule, ReactiveFormsModule, MatDialogModule,
     MatFormFieldModule, MatInputModule, MatButtonModule,
-    MatIconModule, MatProgressSpinnerModule, InputMaskDirective,
+    MatIconModule, MatProgressSpinnerModule, MatCheckboxModule, InputMaskDirective,
   ],
   template: `
     <h2 mat-dialog-title>Novo Cliente</h2>
@@ -47,6 +48,15 @@ import { InputMaskDirective } from '../../../shared/directives/input-mask.direct
           <input matInput formControlName="endereco" id="novo-cliente-endereco" placeholder="Rua, número, bairro...">
         </mat-form-field>
 
+        <div class="lgpd-container">
+          <mat-checkbox formControlName="consentimentoLgpd" color="primary" class="lgpd-checkbox">
+            O cliente está ciente e autoriza o armazenamento dos seus dados para gestão do fiado.
+          </mat-checkbox>
+          @if (form.controls.consentimentoLgpd.touched && form.controls.consentimentoLgpd.hasError('required')) {
+            <div class="erro-lgpd">Aceite obrigatório (LGPD)</div>
+          }
+        </div>
+
         @if (erro()) {
           <div class="erro">{{ erro() }}</div>
         }
@@ -74,6 +84,10 @@ import { InputMaskDirective } from '../../../shared/directives/input-mask.direct
       justify-content: space-between;
     }
     .dialog-actions button { flex: 1; min-height: 48px; margin: 0 !important; }
+    .lgpd-container { margin: 8px 0; display: flex; flex-direction: column; }
+    .lgpd-checkbox { font-size: 13px; line-height: 1.3; }
+    .lgpd-checkbox ::ng-deep .mdc-label { white-space: normal; color: #424242; }
+    .erro-lgpd { color: #c62828; font-size: 12px; margin-top: 4px; padding-left: 32px; }
   `],
 })
 export class NovoClienteDialogComponent {
@@ -83,6 +97,7 @@ export class NovoClienteDialogComponent {
     telefone: [''],
     cpf: [''],
     endereco: [''],
+    consentimentoLgpd: [false, Validators.requiredTrue],
   });
 
   salvando = signal(false);
@@ -96,8 +111,8 @@ export class NovoClienteDialogComponent {
   salvar() {
     if (this.form.invalid) return;
     this.salvando.set(true);
-    const { nome, telefone, cpf, endereco } = this.form.getRawValue();
-    this.clientesService.cadastrar({ nome, telefone: telefone || undefined, cpf: cpf || undefined, endereco: endereco || undefined }).subscribe({
+    const { nome, telefone, cpf, endereco, consentimentoLgpd } = this.form.getRawValue();
+    this.clientesService.cadastrar({ nome, telefone: telefone || undefined, cpf: cpf || undefined, endereco: endereco || undefined, consentimentoLgpd }).subscribe({
       next: cliente => this.dialogRef.close(cliente),
       error: () => {
         this.salvando.set(false);

@@ -120,14 +120,17 @@ import { CurrencyBrPipe } from '../../shared/pipes/currency-br.pipe';
     .page-container {
       max-width: 960px;
       margin: 0 auto;
-      padding: 24px 16px;
+      padding: 16px 12px;
+      box-sizing: border-box;
     }
 
     .header-actions {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 28px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
     .header-buttons {
@@ -153,9 +156,9 @@ import { CurrencyBrPipe } from '../../shared/pipes/currency-br.pipe';
 
     .dashboard-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-      margin-bottom: 24px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
     }
 
     .dash-card {
@@ -179,8 +182,8 @@ import { CurrencyBrPipe } from '../../shared/pipes/currency-br.pipe';
     .dash-card-content {
       display: flex;
       align-items: center;
-      gap: 20px;
-      padding: 24px !important;
+      gap: 16px;
+      padding: 20px 18px !important;
     }
 
     .card-icon-wrapper {
@@ -291,7 +294,9 @@ export class DashboardComponent implements OnInit {
   }
 
   abrirNovoFuncionario() {
-    const ref = this.dialog.open(NovoFuncionarioDialogComponent, { width: '480px' });
+    const ref = this.dialog.open(NovoFuncionarioDialogComponent, { 
+      width: '92vw', maxWidth: '480px', disableClose: false 
+    });
     ref.afterClosed().subscribe(criado => {
       if (criado) {
         this.snackBar.open('Funcionário cadastrado com sucesso!', 'Fechar', { duration: 3000 });

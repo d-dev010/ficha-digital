@@ -21,17 +21,18 @@ import { FuncionariosService } from './funcionarios.service';
     <h2 mat-dialog-title>Novo Funcionário</h2>
     <mat-dialog-content>
       <form [formGroup]="form" class="form-grid">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Nome *</mat-label>
+        <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+          <mat-label>Nome</mat-label>
           <input matInput formControlName="nome" id="novo-func-nome" placeholder="Nome do funcionário">
           @if (form.controls.nome.hasError('required')) {
             <mat-error>Nome é obrigatório</mat-error>
           }
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>E-mail *</mat-label>
-          <input matInput formControlName="email" id="novo-func-email" placeholder="email@exemplo.com" type="email">
+        <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+          <mat-label>E-mail</mat-label>
+          <input matInput formControlName="email" id="novo-func-email"
+                 placeholder="email@exemplo.com" type="email" inputmode="email">
           @if (form.controls.email.hasError('required')) {
             <mat-error>E-mail é obrigatório</mat-error>
           } @else if (form.controls.email.hasError('email')) {
@@ -39,9 +40,10 @@ import { FuncionariosService } from './funcionarios.service';
           }
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Senha Temporária *</mat-label>
-          <input matInput formControlName="senhaTemporaria" id="novo-func-senha" placeholder="Mínimo 8 caracteres" type="password">
+        <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+          <mat-label>Senha Temporária</mat-label>
+          <input matInput formControlName="senhaTemporaria" id="novo-func-senha"
+                 placeholder="Mínimo 8 caracteres" type="password">
           @if (form.controls.senhaTemporaria.hasError('required')) {
             <mat-error>Senha é obrigatória</mat-error>
           } @else if (form.controls.senhaTemporaria.hasError('minlength')) {
@@ -54,18 +56,29 @@ import { FuncionariosService } from './funcionarios.service';
         }
       </form>
     </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close id="btn-cancelar-novo-func">Cancelar</button>
-      <button mat-flat-button color="primary" id="btn-salvar-novo-func"
+    <mat-dialog-actions class="dialog-actions">
+      <button mat-stroked-button mat-dialog-close id="btn-cancelar-novo-func">Cancelar</button>
+      <button mat-raised-button color="primary" id="btn-salvar-novo-func"
               [disabled]="form.invalid || salvando()" (click)="salvar()">
         @if (salvando()) { <mat-spinner diameter="18"></mat-spinner> }
         Cadastrar
       </button>
     </mat-dialog-actions>
   `,
-  styles: [`.form-grid { display: flex; flex-direction: column; gap: 4px; padding-top: 8px; min-width: 360px; }
-            .full-width { width: 100%; }
-            .erro { color: #c62828; font-size: 13px; padding: 4px 0; }`],
+  styles: [`
+    .form-grid { display: flex; flex-direction: column; gap: 4px; padding-top: 8px; }
+    .full-width { width: 100%; }
+    .erro { color: #c62828; font-size: 13px; padding: 4px 0; }
+    .dialog-actions {
+      display: flex;
+      gap: 8px;
+      padding: 0 16px 16px;
+      width: 100%;
+      box-sizing: border-box;
+      justify-content: space-between;
+    }
+    .dialog-actions button { flex: 1; min-height: 48px; margin: 0 !important; }
+  `],
 })
 export class NovoFuncionarioDialogComponent {
   private fb = inject(FormBuilder);

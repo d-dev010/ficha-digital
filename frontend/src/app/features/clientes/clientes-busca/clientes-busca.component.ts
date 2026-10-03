@@ -88,7 +88,11 @@ export class ClientesBuscaComponent implements OnInit, OnDestroy {
   }
 
   abrirNovoCliente() {
-    const ref = this.dialog.open(NovoClienteDialogComponent, { width: '480px' });
+    const ref = this.dialog.open(NovoClienteDialogComponent, { 
+      width: '92vw', 
+      maxWidth: '440px', 
+      disableClose: false 
+    });
     ref.afterClosed().subscribe(criado => {
       if (criado) this.router.navigate(['/clientes', criado.id]);
     });

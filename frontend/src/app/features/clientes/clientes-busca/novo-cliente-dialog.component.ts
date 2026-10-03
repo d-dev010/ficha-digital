@@ -22,7 +22,7 @@ import { InputMaskDirective } from '../../../shared/directives/input-mask.direct
     <h2 mat-dialog-title>Novo Cliente</h2>
     <mat-dialog-content>
       <form [formGroup]="form" class="form-grid">
-        <mat-form-field appearance="outline" class="full-width">
+        <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
           <mat-label>Nome *</mat-label>
           <input matInput formControlName="nome" id="novo-cliente-nome" placeholder="Nome completo">
           @if (form.controls.nome.hasError('required')) {
@@ -30,19 +30,19 @@ import { InputMaskDirective } from '../../../shared/directives/input-mask.direct
           }
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full-width">
+        <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
           <mat-label>Telefone</mat-label>
           <input matInput formControlName="telefone" id="novo-cliente-telefone"
-                 mask="telefone" placeholder="(11) 99999-9999" inputmode="tel">
+                 mask="telefone" placeholder="(11) 99999-9999" type="tel" inputmode="numeric">
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full-width">
+        <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
           <mat-label>CPF (opcional)</mat-label>
           <input matInput formControlName="cpf" id="novo-cliente-cpf"
-                 mask="cpf" placeholder="000.000.000-00" inputmode="numeric">
+                 mask="cpf" placeholder="000.000.000-00" inputmode="numeric" pattern="[0-9]*">
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full-width">
+        <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
           <mat-label>Endereço (opcional)</mat-label>
           <input matInput formControlName="endereco" id="novo-cliente-endereco" placeholder="Rua, número, bairro...">
         </mat-form-field>
@@ -52,18 +52,29 @@ import { InputMaskDirective } from '../../../shared/directives/input-mask.direct
         }
       </form>
     </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close id="btn-cancelar-novo-cliente">Cancelar</button>
-      <button mat-flat-button color="primary" id="btn-salvar-novo-cliente"
+    <mat-dialog-actions class="dialog-actions">
+      <button mat-stroked-button mat-dialog-close id="btn-cancelar-novo-cliente">Cancelar</button>
+      <button mat-raised-button color="primary" id="btn-salvar-novo-cliente"
               [disabled]="form.invalid || salvando()" (click)="salvar()">
         @if (salvando()) { <mat-spinner diameter="18"></mat-spinner> }
         Cadastrar
       </button>
     </mat-dialog-actions>
   `,
-  styles: [`.form-grid { display: flex; flex-direction: column; gap: 4px; padding-top: 8px; min-width: 360px; }
-            .full-width { width: 100%; }
-            .erro { color: #c62828; font-size: 13px; padding: 4px 0; }`],
+  styles: [`
+    .form-grid { display: flex; flex-direction: column; gap: 4px; padding-top: 8px; }
+    .full-width { width: 100%; }
+    .erro { color: #c62828; font-size: 13px; padding: 4px 0; }
+    .dialog-actions {
+      display: flex;
+      gap: 8px;
+      padding: 0 16px 16px;
+      width: 100%;
+      box-sizing: border-box;
+      justify-content: space-between;
+    }
+    .dialog-actions button { flex: 1; min-height: 48px; margin: 0 !important; }
+  `],
 })
 export class NovoClienteDialogComponent {
   private fb = inject(FormBuilder);

@@ -324,3 +324,82 @@
   mat-icon { font-size: 3rem; width: 3rem; height: 3rem; }
   p { margin: 0; font-size: 0.9rem; }
 }
+
+@media (max-width: 768px) {
+  .admin-layout {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .admin-sidebar {
+    padding: 12px 16px;
+    gap: 12px;
+    border-right: none;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .sidebar-logo {
+    padding: 0;
+  }
+
+  .sidebar-stats {
+    display: none;
+  }
+
+  .sidebar-user {
+    margin-top: 0;
+    padding: 8px;
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .logout-btn {
+    width: auto;
+    padding: 8px 12px;
+  }
+
+  .admin-main {
+    overflow: visible;
+  }
+
+  .admin-header {
+    padding: 20px 16px 0;
+  }
+
+  .admin-tabs ::ng-deep .mat-mdc-tab-header {
+    padding: 0 16px;
+  }
+
+  .tab-content {
+    padding: 16px;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .section-header-left {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+  }
+
+  .admin-table {
+    min-width: 800px;
+  }
+}

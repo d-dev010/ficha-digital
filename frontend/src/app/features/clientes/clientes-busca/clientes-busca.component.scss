@@ -2,37 +2,67 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 
-  .toolbar-logo { margin-right: 8px; }
-  .toolbar-title { font-weight: 700; font-size: 18px; }
-  .spacer { flex: 1; }
-  .usuario-nome { font-size: 14px; opacity: 0.85; margin-right: 8px; }
+  .toolbar-logo {
+    margin-right: 8px;
+  }
+
+  .toolbar-title {
+    font-weight: 700;
+    font-size: 18px;
+  }
+
+  .spacer {
+    flex: 1;
+  }
+
+  .usuario-nome {
+    font-size: 13px;
+    opacity: 0.85;
+    margin-right: 4px;
+    /* Oculta o nome em telas muito pequenas para não empurrar os ícones */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+
+    @media (max-width: 360px) {
+      display: none;
+    }
+  }
 }
 
 .page-container {
   max-width: 720px;
   margin: 0 auto;
-  padding: 24px 16px;
+  padding: 16px 12px;
+  box-sizing: border-box;
 }
 
 .header-section {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 
   .page-title {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 700;
     color: #1a237e;
     margin: 0;
+  }
+
+  /* Botão "Novo Cliente" com bom tamanho de toque */
+  button {
+    height: 44px;
+    min-width: 44px;
   }
 }
 
 .busca-field {
   width: 100%;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .resultado-info {
@@ -44,7 +74,7 @@
 .clientes-lista {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .cliente-card {
@@ -53,9 +83,18 @@
   transition: box-shadow 0.2s ease, transform 0.15s ease;
   border: 1px solid #e8eaf6;
 
-  &:hover {
-    box-shadow: 0 6px 20px rgba(57, 73, 171, 0.15) !important;
-    transform: translateY(-2px);
+  /* Remove hover lift em touch — só ativa em dispositivos com ponteiro real */
+  @media (hover: hover) {
+    &:hover {
+      box-shadow: 0 6px 20px rgba(57, 73, 171, 0.15) !important;
+      transform: translateY(-2px);
+    }
+  }
+
+  /* Feedback de toque no mobile */
+  &:active {
+    opacity: 0.85;
+    transform: scale(0.985);
   }
 }
 
@@ -63,18 +102,20 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px !important;
+  padding: 12px 14px !important;
 }
 
 .cliente-info {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+  min-width: 0;
+  /* permite text-overflow funcionar */
 }
 
 .cliente-avatar {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: #e8eaf6;
   display: flex;
@@ -82,16 +123,30 @@
   justify-content: center;
   flex-shrink: 0;
 
-  mat-icon { color: #3949ab; }
+  mat-icon {
+    color: #3949ab;
+  }
 }
 
 .cliente-dados {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 
-  .cliente-nome { font-weight: 600; font-size: 15px; color: #212121; }
-  .cliente-detalhe { font-size: 13px; color: #757575; }
+  .cliente-nome {
+    font-weight: 600;
+    font-size: 15px;
+    color: #212121;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cliente-detalhe {
+    font-size: 13px;
+    color: #757575;
+  }
 }
 
 .cliente-saldo {
@@ -99,12 +154,27 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  flex-shrink: 0;
+  margin-left: 8px;
 
-  .saldo-label { font-size: 11px; color: #9e9e9e; text-transform: uppercase; }
-  .saldo-valor { font-size: 16px; font-weight: 700; }
+  .saldo-label {
+    font-size: 11px;
+    color: #9e9e9e;
+    text-transform: uppercase;
+  }
 
-  &.saldo-devedor .saldo-valor { color: #c62828; }
-  &.saldo-zerado .saldo-valor { color: #2e7d32; }
+  .saldo-valor {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  &.saldo-devedor .saldo-valor {
+    color: #c62828;
+  }
+
+  &.saldo-zerado .saldo-valor {
+    color: #2e7d32;
+  }
 }
 
 .estado-vazio {
@@ -123,5 +193,8 @@
     opacity: 0.3;
   }
 
-  p { font-size: 16px; margin: 0; }
+  p {
+    font-size: 16px;
+    margin: 0;
+  }
 }

@@ -64,12 +64,12 @@ import { ClientesService } from '../clientes.service';
       }
     </mat-dialog-content>
 
-    <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close id="btn-cancelar-exclusao" [disabled]="excluindo()">
+    <mat-dialog-actions class="dialog-actions">
+      <button mat-stroked-button mat-dialog-close id="btn-cancelar-exclusao" [disabled]="excluindo()">
         Cancelar
       </button>
       <button
-        mat-flat-button
+        mat-raised-button
         id="btn-confirmar-exclusao"
         class="btn-excluir"
         [disabled]="!nomeConfirmado() || excluindo()"
@@ -89,7 +89,7 @@ import { ClientesService } from '../clientes.service';
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 20px 24px 0;
+      padding: 16px 16px 0;
     }
 
     .danger-icon-wrapper {
@@ -118,9 +118,10 @@ import { ClientesService } from '../clientes.service';
     }
 
     mat-dialog-content {
-      padding-top: 16px !important;
-      min-width: 420px;
-      max-width: 480px;
+      padding: 16px 16px 0 !important;
+      /* SEM min-width: deixa o dialog ser responsivo no mobile */
+      max-width: 100%;
+      box-sizing: border-box;
     }
 
     .warning-box {
@@ -223,9 +224,18 @@ import { ClientesService } from '../clientes.service';
       display: inline-block;
     }
 
-    mat-dialog-actions {
-      padding: 8px 24px 16px !important;
+    .dialog-actions {
+      display: flex;
       gap: 8px;
+      padding: 8px 16px 16px !important;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .dialog-actions button {
+      flex: 1;
+      min-height: 48px;
+      margin: 0 !important;
     }
   `],
 })

@@ -47,18 +47,22 @@ import { ClientesService } from '../clientes.service';
         }
       </form>
     </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Cancelar</button>
-      <button mat-flat-button color="warn" [disabled]="form.invalid || salvando()" (click)="salvar()">
+    <mat-dialog-actions class="dialog-actions">
+      <button mat-stroked-button mat-dialog-close>Cancelar</button>
+      <button mat-raised-button color="warn" [disabled]="form.invalid || salvando()" (click)="salvar()">
         @if (salvando()) { <mat-spinner diameter="18"></mat-spinner> }
         Confirmar Fiado
       </button>
     </mat-dialog-actions>
   `,
-  styles: [`.form-grid { display: flex; flex-direction: column; gap: 4px; padding-top: 16px; min-width: 320px; }
-            .subtitle { margin-top: -8px; margin-bottom: 8px; color: #616161; }
-            .full-width { width: 100%; }
-            .erro { color: #c62828; font-size: 13px; padding: 4px 0; }`],
+  styles: [`
+    .form-grid { display: flex; flex-direction: column; gap: 4px; padding-top: 12px; }
+    .subtitle { margin-top: -8px; margin-bottom: 8px; color: #616161; font-size: 14px; }
+    .full-width { width: 100%; }
+    .erro { color: #c62828; font-size: 13px; padding: 4px 0; }
+    .dialog-actions { display: flex; gap: 8px; padding: 0 16px 16px; width: 100%; box-sizing: border-box; }
+    .dialog-actions button { flex: 1; min-height: 48px; margin: 0 !important; }
+  `],
 })
 export class LancarFiadoDialogComponent {
   private fb = inject(FormBuilder);

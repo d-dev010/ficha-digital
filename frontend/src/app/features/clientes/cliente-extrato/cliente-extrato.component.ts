@@ -74,7 +74,7 @@ export class ClienteExtratoComponent implements OnInit {
 
   abrirLancarFiado() {
     const ref = this.dialog.open(LancarFiadoDialogComponent, {
-      width: '440px',
+      width: '92vw', maxWidth: '440px', disableClose: false,
       data: { clienteId: this.clienteId, nomeCliente: this.cliente()?.nome },
     });
     ref.afterClosed().subscribe(lancou => { if (lancou) this.carregar(); });
@@ -82,7 +82,7 @@ export class ClienteExtratoComponent implements OnInit {
 
   abrirRegistrarPagamento() {
     const ref = this.dialog.open(RegistrarPagamentoDialogComponent, {
-      width: '440px',
+      width: '92vw', maxWidth: '440px', disableClose: false,
       data: { clienteId: this.clienteId, nomeCliente: this.cliente()?.nome, saldoAtual: this.cliente()?.saldoDevedor },
     });
     ref.afterClosed().subscribe(registrou => { if (registrou) this.carregar(); });
@@ -90,7 +90,7 @@ export class ClienteExtratoComponent implements OnInit {
 
   abrirEditarTelefone() {
     const ref = this.dialog.open(EditarTelefoneDialogComponent, {
-      width: '400px',
+      width: '92vw', maxWidth: '420px', disableClose: false,
       data: {
         clienteId: this.clienteId,
         nomeCliente: this.cliente()?.nome,
@@ -99,7 +99,6 @@ export class ClienteExtratoComponent implements OnInit {
     });
     ref.afterClosed().subscribe(editou => {
       if (editou) {
-        // Update the client state with the new details returned from the backend
         this.cliente.set(editou);
       }
     });
@@ -107,7 +106,7 @@ export class ClienteExtratoComponent implements OnInit {
 
   abrirExcluirCliente() {
     const ref = this.dialog.open(ConfirmarExclusaoDialogComponent, {
-      width: '520px',
+      width: '92vw', maxWidth: '520px', disableClose: false,
       data: { clienteId: this.clienteId, nomeCliente: this.cliente()?.nome },
     });
     ref.afterClosed().subscribe(excluiu => {

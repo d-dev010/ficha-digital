@@ -39,19 +39,23 @@ import { InputMaskDirective } from '../../../shared/directives/input-mask.direct
         }
       </form>
     </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close id="btn-cancelar-editar-telefone">Cancelar</button>
-      <button mat-flat-button color="primary" id="btn-salvar-editar-telefone"
+    <mat-dialog-actions class="dialog-actions">
+      <button mat-stroked-button mat-dialog-close id="btn-cancelar-editar-telefone">Cancelar</button>
+      <button mat-raised-button color="primary" id="btn-salvar-editar-telefone"
               [disabled]="form.invalid || salvando()" (click)="salvar()">
         @if (salvando()) { <mat-spinner diameter="18"></mat-spinner> }
         Salvar
       </button>
     </mat-dialog-actions>
   `,
-  styles: [`.form-grid { display: flex; flex-direction: column; gap: 4px; padding-top: 12px; min-width: 340px; }
-            .subtitle { margin-top: -8px; margin-bottom: 8px; color: #616161; }
-            .full-width { width: 100%; }
-            .erro { color: #c62828; font-size: 13px; padding: 4px 0; }`],
+  styles: [`
+    .form-grid { display: flex; flex-direction: column; gap: 4px; padding-top: 12px; }
+    .subtitle { margin-top: -8px; margin-bottom: 8px; color: #616161; font-size: 14px; }
+    .full-width { width: 100%; }
+    .erro { color: #c62828; font-size: 13px; padding: 4px 0; }
+    .dialog-actions { display: flex; gap: 8px; padding: 0 16px 16px; width: 100%; box-sizing: border-box; }
+    .dialog-actions button { flex: 1; min-height: 48px; margin: 0 !important; }
+  `],
 })
 export class EditarTelefoneDialogComponent {
   readonly data = inject<{ clienteId: string; nomeCliente: string; telefoneAtual: string | null }>(MAT_DIALOG_DATA);

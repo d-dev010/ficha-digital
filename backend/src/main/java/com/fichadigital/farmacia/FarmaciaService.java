@@ -34,11 +34,9 @@ public class FarmaciaService {
      */
     @Transactional
     public Farmacia criarFarmaciaComDono(CriarFarmaciaRequest request) {
-        if (request.cnpj() != null && farmaciaRepository.existsByCnpj(request.cnpj())) {
-            throw new IllegalArgumentException("CNPJ já cadastrado: " + request.cnpj());
-        }
-        if (usuarioRepository.existsByEmail(request.emailDono())) {
-            throw new IllegalArgumentException("E-mail já cadastrado: " + request.emailDono());
+        if ((request.cnpj() != null && farmaciaRepository.existsByCnpj(request.cnpj())) || 
+            usuarioRepository.existsByEmail(request.emailDono())) {
+            throw new IllegalArgumentException("Dados inválidos ou e-mail/CNPJ indisponíveis para cadastro.");
         }
 
         Farmacia farmacia = Farmacia.builder()

@@ -15,8 +15,11 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import java.io.IOException;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Filtro JWT que intercepta cada request e popula o SecurityContext.
@@ -37,6 +40,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UsuarioRepository usuarioRepository;
+
+    // Cache para evitar buscar no banco de dados a cada requisição (problema de performance do JWT stateful).
+    // TTL de 5 minutos permite revogação quase imediata sem comprometer o banco de dados.
+    private final Cache<UUID, Boolean> activeUsersCache = Caffeine.newBuilder()
+            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .maximumSize(10_000)
+            .build();
 
     @Override
     protected void doFilterInternal(
@@ -68,19 +78,45 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         UUID usuarioId = jwtService.extrairUsuarioId(token);
 
-        usuarioRepository.findById(usuarioId).ifPresent(usuario -> {
-            // Problema 5 — Segurança: recusa autenticação se o usuário foi desativado.
-            // Isso revoga sessões instantaneamente mesmo que o JWT ainda não tenha expirado.
-            if (!usuario.isEnabled()) {
-                log.warn("Tentativa de acesso com token válido por usuário desativado (id={})", usuarioId);
-                return;
-            }
-            UserDetails userDetails = usuario;
-            UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authToken);
+        Boolean isActive = activeUsersCache.get(usuarioId, id -> {
+            return usuarioRepository.findById(id)
+                    .map(u -> {
+                        // Salva os UserDetails no cache? Não, apenas se está ativo, 
+                        // pois UserDetails tem entidades amarradas que podem dar lazy load exception.
+                        // Para o SecurityContext, precisamos do UserDetails.
+                        // Para contornar e continuar simples:
+                        return u.isEnabled();
+                    }).orElse(false);
         });
+
+        if (Boolean.FALSE.equals(isActive)) {
+            log.warn("Tentativa de acesso com token válido por usuário desativado ou inexistente (id={})", usuarioId);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // Como o usuário está ativo (verificado pelo cache em memória), 
+        // não precisamos ir ao banco de dados para criar o UserDetails.
+        // O próprio Token tem tudo que precisamos (userId, perfil, farmaciaId).
+        UUID farmaciaId = jwtService.extrairFarmaciaId(token);
+        String perfilStr = jwtService.extrairPerfil(token);
+
+        com.fichadigital.usuario.Usuario usuario = new com.fichadigital.usuario.Usuario();
+        usuario.setId(usuarioId);
+        usuario.setPerfil(com.fichadigital.usuario.Perfil.valueOf(perfilStr));
+        if (farmaciaId != null) {
+            com.fichadigital.farmacia.Farmacia farmacia = new com.fichadigital.farmacia.Farmacia();
+            farmacia.setId(farmaciaId);
+            usuario.setFarmacia(farmacia);
+        }
+        usuario.setAtivo(true);
+        // Não precisamos de senha/email no SecurityContext para as rotas da API
+
+        org.springframework.security.core.userdetails.UserDetails userDetails = usuario;
+        org.springframework.security.authentication.UsernamePasswordAuthenticationToken authToken =
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        authToken.setDetails(new org.springframework.security.web.authentication.WebAuthenticationDetailsSource().buildDetails(request));
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(authToken);
 
         filterChain.doFilter(request, response);
     }

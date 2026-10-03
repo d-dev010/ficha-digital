@@ -16,6 +16,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
@@ -31,6 +32,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final UsuarioRepository usuarioRepository;
     private final JwtService jwtService;
+    private final HttpServletRequest httpServletRequest;
 
     /**
      * Cache de buckets de Rate Limiting por e-mail com TTL de 1 hora.
@@ -44,7 +46,15 @@ public class AuthService {
             .maximumSize(100_000) // teto de segurança adicional
             .build();
 
-    private Bucket resolveBucket(String email) {
+    private String getClientIp() {
+        String xfHeader = httpServletRequest.getHeader("X-Forwarded-For");
+        if (xfHeader == null || xfHeader.isEmpty()) {
+            return httpServletRequest.getRemoteAddr();
+        }
+        return xfHeader.split(",")[0].trim();
+    }
+
+    private Bucket resolveBucket(String key) {
         return loginBuckets.get(email, k -> {
             Refill refill = Refill.intervally(5, Duration.ofMinutes(5));
             Bandwidth limit = Bandwidth.classic(5, refill);
@@ -60,7 +70,8 @@ public class AuthService {
      * @throws AuthenticationException se credenciais inválidas.
      */
     public TokenResponse autenticar(LoginRequest request) {
-        Bucket bucket = resolveBucket(request.email());
+        String ip = getClientIp();
+        Bucket bucket = resolveBucket(ip);
         if (!bucket.tryConsume(1)) {
             throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Muitas tentativas de login. Tente novamente mais tarde.");
         }

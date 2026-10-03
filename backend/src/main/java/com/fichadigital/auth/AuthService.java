@@ -55,7 +55,7 @@ public class AuthService {
     }
 
     private Bucket resolveBucket(String key) {
-        return loginBuckets.get(email, k -> {
+        return loginBuckets.get(key, k -> {
             Refill refill = Refill.intervally(5, Duration.ofMinutes(5));
             Bandwidth limit = Bandwidth.classic(5, refill);
             return Bucket.builder().addLimit(limit).build();

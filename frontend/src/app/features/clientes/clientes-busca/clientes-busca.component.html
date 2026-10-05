@@ -47,7 +47,8 @@
   <!-- Estado: resultados -->
   @if (!carregando() && clientes().length > 0) {
     <p class="resultado-info">
-      {{ totalEncontrados() }} cliente(s) encontrado(s)
+      Mostrando {{ paginaAtual() * 20 + 1 }}–{{ paginaAtual() * 20 + clientes().length }}
+      de {{ totalEncontrados() }} cliente(s)
     </p>
 
     <div class="clientes-lista">
@@ -76,6 +77,31 @@
         </mat-card>
       }
     </div>
+
+    <!-- Paginação -->
+    @if (totalPaginas() > 1) {
+      <div class="paginacao">
+        <button mat-icon-button
+                id="btn-pagina-anterior"
+                [disabled]="paginaAtual() === 0"
+                (click)="paginaAnterior()"
+                matTooltip="Página anterior">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+
+        <span class="paginacao-info">
+          Página {{ paginaAtual() + 1 }} de {{ totalPaginas() }}
+        </span>
+
+        <button mat-icon-button
+                id="btn-proxima-pagina"
+                [disabled]="paginaAtual() >= totalPaginas() - 1"
+                (click)="proximaPagina()"
+                matTooltip="Próxima página">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+    }
   }
 
   <!-- Estado: vazio -->

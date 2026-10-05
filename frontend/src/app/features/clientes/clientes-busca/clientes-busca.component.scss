@@ -198,3 +198,21 @@
     margin: 0;
   }
 }
+
+.paginacao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px 0 4px;
+  border-top: 1px solid #e8eaf6;
+}
+
+.paginacao-info {
+  font-size: 14px;
+  color: #5c6bc0;
+  font-weight: 600;
+  min-width: 120px;
+  text-align: center;
+}

@@ -40,7 +40,7 @@ import { InputMaskDirective } from '../../../shared/directives/input-mask.direct
         <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
           <mat-label>CPF (opcional)</mat-label>
           <input matInput formControlName="cpf" id="novo-cliente-cpf"
-                 mask="cpf" placeholder="000.000.000-00" inputmode="numeric" pattern="[0-9]*">
+                 mask="cpf" placeholder="000.000.000-00" inputmode="numeric">
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">

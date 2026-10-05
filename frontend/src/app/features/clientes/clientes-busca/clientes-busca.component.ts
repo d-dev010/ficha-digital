@@ -21,6 +21,8 @@ import { ClienteResumo } from '../../../core/models/cliente.model';
 import { CurrencyBrPipe } from '../../../shared/pipes/currency-br.pipe';
 import { NovoClienteDialogComponent } from './novo-cliente-dialog.component';
 
+const PAGE_SIZE = 20;
+
 @Component({
   selector: 'app-clientes-busca',
   standalone: true,
@@ -42,6 +44,8 @@ export class ClientesBuscaComponent implements OnInit, OnDestroy {
   clientes = signal<ClienteResumo[]>([]);
   carregando = signal(false);
   totalEncontrados = signal(0);
+  totalPaginas = signal(0);
+  paginaAtual = signal(0);
   buscaAtiva = signal('');
 
   constructor(
@@ -52,30 +56,57 @@ export class ClientesBuscaComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    // debounceTime: evita chamada a cada tecla (conforme instrução do doc frontend)
+    // Ao digitar: reseta para a página 0 e recarrega
     this.form.controls.busca.valueChanges.pipe(
       debounceTime(350),
       distinctUntilChanged(),
       switchMap(termo => {
         this.carregando.set(true);
         this.buscaAtiva.set(termo);
-        return this.clientesService.buscar(termo);
+        this.paginaAtual.set(0);
+        return this.clientesService.buscar(termo, 0, PAGE_SIZE);
       }),
       takeUntil(this.destroy$),
     ).subscribe({
       next: page => {
         this.clientes.set(page.content);
         this.totalEncontrados.set(page.totalElements);
+        this.totalPaginas.set(page.totalPages);
         this.carregando.set(false);
       },
       error: () => this.carregando.set(false),
     });
 
     // Carrega lista inicial
-    this.clientesService.buscar('').subscribe(page => {
-      this.clientes.set(page.content);
-      this.totalEncontrados.set(page.totalElements);
-    });
+    this.carregarPagina(0);
+  }
+
+  /** Carrega uma página específica mantendo o termo de busca atual. */
+  carregarPagina(pagina: number) {
+    this.carregando.set(true);
+    this.paginaAtual.set(pagina);
+    const termo = this.form.controls.busca.value;
+    this.clientesService.buscar(termo, pagina, PAGE_SIZE)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: page => {
+          this.clientes.set(page.content);
+          this.totalEncontrados.set(page.totalElements);
+          this.totalPaginas.set(page.totalPages);
+          this.carregando.set(false);
+          // Scroll suave ao topo da lista ao trocar página
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+        error: () => this.carregando.set(false),
+      });
+  }
+
+  paginaAnterior() {
+    if (this.paginaAtual() > 0) this.carregarPagina(this.paginaAtual() - 1);
+  }
+
+  proximaPagina() {
+    if (this.paginaAtual() < this.totalPaginas() - 1) this.carregarPagina(this.paginaAtual() + 1);
   }
 
   ngOnDestroy() {

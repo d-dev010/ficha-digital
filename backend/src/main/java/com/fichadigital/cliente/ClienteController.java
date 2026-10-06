@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -62,7 +61,9 @@ public class ClienteController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         UUID farmaciaId = SecurityUtils.farmaciaId(); // RNF03
-        Pageable pageable = PageRequest.of(page, Math.min(size, 100), Sort.by("nome").ascending());
+        // Sort removido propositalmente: a ordenação por relevância (starts-with > contains > phone/CPF)
+        // é definida na query do repository e não deve ser sobrescrita pelo Pageable.
+        Pageable pageable = PageRequest.of(page, Math.min(size, 100));
         return ResponseEntity.ok(clienteService.buscar(farmaciaId, busca, pageable));
     }
 

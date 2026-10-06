@@ -26,18 +26,33 @@ public interface ClienteRepository extends JpaRepository<Cliente, UUID> {
     boolean existsByIdAndFarmaciaId(UUID id, UUID farmaciaId);
 
     /**
-     * Busca paginada por nome (parcial, case-insensitive), telefone ou CPF — US04 (Problema 2 — Performance).
-     * Filtrada por farmaciaId — RNF03. Ordenação e limitação feitas pelo banco via Pageable.
+     * Busca paginada por nome (parcial, case-insensitive, sem acento), telefone ou CPF — US04.
+     * Filtrada por farmaciaId — RNF03.
+     *
+     * Melhorias em relação à versão anterior:
+     *  1. unaccent(): "e" encontra "é", "a" encontra "ã", "c" encontra "ç", etc.
+     *  2. ORDER BY de relevância:
+     *       - prioridade 1: nome começa com o termo (starts-with)
+     *       - prioridade 2: nome contém o termo em outra posição
+     *       - prioridade 3: match apenas por telefone/CPF
+     *     Dentro de cada nível, ordena alfabeticamente por nome.
      */
     @Query("""
             SELECT c FROM Cliente c
             WHERE c.farmacia.id = :farmaciaId
               AND c.anonimizado = false
               AND (
-                    LOWER(c.nome) LIKE LOWER(CONCAT('%', :termo, '%'))
+                    FUNCTION('unaccent', LOWER(c.nome)) LIKE FUNCTION('unaccent', LOWER(CONCAT('%', :termo, '%')))
                  OR c.telefone LIKE CONCAT('%', :termo, '%')
-                 OR c.cpf LIKE CONCAT('%', :termo, '%')
+                 OR c.cpf     LIKE CONCAT('%', :termo, '%')
               )
+            ORDER BY
+              CASE
+                WHEN FUNCTION('unaccent', LOWER(c.nome)) LIKE FUNCTION('unaccent', LOWER(CONCAT(:termo, '%'))) THEN 1
+                WHEN FUNCTION('unaccent', LOWER(c.nome)) LIKE FUNCTION('unaccent', LOWER(CONCAT('%', :termo, '%'))) THEN 2
+                ELSE 3
+              END ASC,
+              c.nome ASC
             """)
     Page<Cliente> buscar(@Param("farmaciaId") UUID farmaciaId, @Param("termo") String termo, Pageable pageable);
 

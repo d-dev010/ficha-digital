@@ -42,14 +42,14 @@ public interface ClienteRepository extends JpaRepository<Cliente, UUID> {
             WHERE c.farmacia.id = :farmaciaId
               AND c.anonimizado = false
               AND (
-                    FUNCTION('unaccent', LOWER(c.nome)) LIKE FUNCTION('unaccent', LOWER(CONCAT('%', :termo, '%')))
+                    FUNCTION('unaccent_immutable', LOWER(c.nome)) LIKE FUNCTION('unaccent_immutable', LOWER(CONCAT('%', :termo, '%')))
                  OR c.telefone LIKE CONCAT('%', :termo, '%')
                  OR c.cpf     LIKE CONCAT('%', :termo, '%')
               )
             ORDER BY
               CASE
-                WHEN FUNCTION('unaccent', LOWER(c.nome)) LIKE FUNCTION('unaccent', LOWER(CONCAT(:termo, '%'))) THEN 1
-                WHEN FUNCTION('unaccent', LOWER(c.nome)) LIKE FUNCTION('unaccent', LOWER(CONCAT('%', :termo, '%'))) THEN 2
+                WHEN FUNCTION('unaccent_immutable', LOWER(c.nome)) LIKE FUNCTION('unaccent_immutable', LOWER(CONCAT(:termo, '%'))) THEN 1
+                WHEN FUNCTION('unaccent_immutable', LOWER(c.nome)) LIKE FUNCTION('unaccent_immutable', LOWER(CONCAT('%', :termo, '%'))) THEN 2
                 ELSE 3
               END ASC,
               c.nome ASC

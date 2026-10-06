@@ -4,8 +4,15 @@
 
 CREATE EXTENSION IF NOT EXISTS unaccent;
 
--- Índice funcional em unaccent(lower(nome)) por farmácia — usado pela query de busca otimizada.
--- Substitui o índice simples em nome para suportar a busca sem acento com performance.
+-- unaccent() nativa é STABLE — índices funcionais exigem IMMUTABLE.
+-- Criamos um wrapper que declara IMMUTABLE explicitamente (padrão recomendado pela doc do PostgreSQL).
+CREATE OR REPLACE FUNCTION unaccent_immutable(text)
+    RETURNS text AS $$
+        SELECT unaccent($1);
+    $$ LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
+
+-- Índice funcional usando o wrapper — substitui o índice simples em nome.
+-- Permite busca sem acento com performance para 5.000+ clientes (RNF09).
 DROP INDEX IF EXISTS idx_cliente_farmacia_nome;
 CREATE INDEX idx_cliente_farmacia_nome_unaccent
-    ON cliente(farmacia_id, unaccent(lower(nome)));
+    ON cliente(farmacia_id, unaccent_immutable(lower(nome)));

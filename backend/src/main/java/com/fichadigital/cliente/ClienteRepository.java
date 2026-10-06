@@ -37,23 +37,34 @@ public interface ClienteRepository extends JpaRepository<Cliente, UUID> {
      *       - prioridade 3: match apenas por telefone/CPF
      *     Dentro de cada nível, ordena alfabeticamente por nome.
      */
-    @Query("""
-            SELECT c FROM Cliente c
-            WHERE c.farmacia.id = :farmaciaId
+    @Query(value = """
+            SELECT c.* FROM clientes c
+            WHERE c.farmacia_id = :farmaciaId
               AND c.anonimizado = false
               AND (
-                    FUNCTION('unaccent_immutable', LOWER(c.nome)) LIKE FUNCTION('unaccent_immutable', LOWER(CONCAT('%', :termo, '%')))
-                 OR c.telefone LIKE CONCAT('%', :termo, '%')
-                 OR c.cpf     LIKE CONCAT('%', :termo, '%')
+                    unaccent_immutable(lower(c.nome))    LIKE unaccent_immutable(lower(concat('%', :termo, '%')))
+                 OR c.telefone LIKE concat('%', :termo, '%')
+                 OR c.cpf     LIKE concat('%', :termo, '%')
               )
             ORDER BY
               CASE
-                WHEN FUNCTION('unaccent_immutable', LOWER(c.nome)) LIKE FUNCTION('unaccent_immutable', LOWER(CONCAT(:termo, '%'))) THEN 1
-                WHEN FUNCTION('unaccent_immutable', LOWER(c.nome)) LIKE FUNCTION('unaccent_immutable', LOWER(CONCAT('%', :termo, '%'))) THEN 2
+                WHEN unaccent_immutable(lower(c.nome)) LIKE unaccent_immutable(lower(concat(:termo, '%'))) THEN 1
+                WHEN unaccent_immutable(lower(c.nome)) LIKE unaccent_immutable(lower(concat('%', :termo, '%'))) THEN 2
                 ELSE 3
               END ASC,
               c.nome ASC
-            """)
+            """,
+            countQuery = """
+            SELECT count(c.*) FROM clientes c
+            WHERE c.farmacia_id = :farmaciaId
+              AND c.anonimizado = false
+              AND (
+                    unaccent_immutable(lower(c.nome))    LIKE unaccent_immutable(lower(concat('%', :termo, '%')))
+                 OR c.telefone LIKE concat('%', :termo, '%')
+                 OR c.cpf     LIKE concat('%', :termo, '%')
+              )
+            """,
+            nativeQuery = true)
     Page<Cliente> buscar(@Param("farmaciaId") UUID farmaciaId, @Param("termo") String termo, Pageable pageable);
 
     /**

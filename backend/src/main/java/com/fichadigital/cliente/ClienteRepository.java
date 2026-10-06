@@ -38,7 +38,7 @@ public interface ClienteRepository extends JpaRepository<Cliente, UUID> {
      *     Dentro de cada nível, ordena alfabeticamente por nome.
      */
     @Query(value = """
-            SELECT c.* FROM clientes c
+            SELECT c.* FROM cliente c
             WHERE c.farmacia_id = :farmaciaId
               AND c.anonimizado = false
               AND (
@@ -55,7 +55,7 @@ public interface ClienteRepository extends JpaRepository<Cliente, UUID> {
               c.nome ASC
             """,
             countQuery = """
-            SELECT count(c.*) FROM clientes c
+            SELECT count(c.*) FROM cliente c
             WHERE c.farmacia_id = :farmaciaId
               AND c.anonimizado = false
               AND (

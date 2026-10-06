@@ -6,9 +6,10 @@ CREATE EXTENSION IF NOT EXISTS unaccent;
 
 -- unaccent() nativa é STABLE — índices funcionais exigem IMMUTABLE.
 -- Criamos um wrapper que declara IMMUTABLE explicitamente (padrão recomendado pela doc do PostgreSQL).
+-- public.unaccent: qualificamos o schema pois o search_path dentro de funções SQL pode não incluí-lo.
 CREATE OR REPLACE FUNCTION unaccent_immutable(text)
     RETURNS text AS $$
-        SELECT unaccent($1);
+        SELECT public.unaccent($1);
     $$ LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
 
 -- Índice funcional usando o wrapper — substitui o índice simples em nome.

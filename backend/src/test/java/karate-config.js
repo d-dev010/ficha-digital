@@ -9,14 +9,14 @@ function fn() {
   var config = {
     // Ambiente dev (local ou Docker do GitHub CI)
     // Credenciais espelham o .env.example para o Docker conseguir autenticar
-    apiUrl: 'http://localhost:8080/api',
+    apiUrl: 'http://localhost:8080',
     adminEmail: 'admin@suafarmacia.com',
     adminPassword: 'SenhaForteDe16CaracteresOuMais!'
   };
 
   if (env == 'prd') {
     // Apontado para a API no Render via secrets do GitHub
-    config.apiUrl = java.lang.System.getenv('KARATE_API_URL') || 'https://sua-api.onrender.com/api';
+    config.apiUrl = java.lang.System.getenv('KARATE_API_URL') || 'https://sua-api.onrender.com';
     config.adminEmail = java.lang.System.getenv('KARATE_ADMIN_EMAIL') || '';
     config.adminPassword = java.lang.System.getenv('KARATE_ADMIN_PASSWORD') || '';
   }

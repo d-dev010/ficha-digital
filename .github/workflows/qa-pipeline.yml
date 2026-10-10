@@ -2,9 +2,9 @@ name: QA Automation Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "feature/deploy-configs" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "feature/deploy-configs" ]
 
 jobs:
   test-api:

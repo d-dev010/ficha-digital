@@ -23,9 +23,9 @@ jobs:
 
       - name: 🐳 Subir a API no Docker (Ambiente de Teste CI)
         run: |
-          # Copia o env de exemplo para o .env real para que o docker-compose consiga subir
+          # Copia o env de exemplo para o .env real para que o docker consiga subir
           cp .env.example .env
-          docker-compose up -d db api
+          docker compose up -d db api
           
       - name: ⏳ Aguardar a API ficar pronta
         run: |

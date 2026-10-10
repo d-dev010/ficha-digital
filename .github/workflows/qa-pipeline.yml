@@ -7,9 +7,14 @@ on:
     branches: [ "main", "feature/deploy-configs" ]
 
 jobs:
-  test-api:
+  # ============================================================
+  # JOB: Sobe a API no Docker do GitHub e roda o Karate
+  # Ambiente 100% isolado — sem tocar no banco de produção!
+  # ============================================================
+  karate-api-test:
+    name: 🥋 Karate API Tests (Docker CI)
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: 📥 Checkout do Código
         uses: actions/checkout@v3
@@ -21,30 +26,28 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: 🐳 Subir a API no Docker (Ambiente de Teste CI)
+      - name: 🐳 Subir Banco + API no Docker
         run: |
-          # Copia o env de exemplo para o .env real para que o docker consiga subir
           cp .env.example .env
           docker compose up -d db api
-          
-      - name: ⏳ Aguardar a API ficar pronta
-        run: |
-          echo "Aguardando a API inicializar na porta 8080..."
-          # Tenta fazer um curl na porta 8080 até responder (timeout de 60s)
-          timeout 60s bash -c 'until curl -s http://localhost:8080 > /dev/null; do sleep 2; done' || true
-          echo "API Pronta!"
 
-      - name: 🥋 Rodar Testes de API (Karate)
+      - name: ⏳ Aguardar API estar 100% pronta
+        run: |
+          echo "Aguardando o endpoint /health da API responder com 200..."
+          # Espera até 120s pelo /health (garante que o AdminInitializer rodou)
+          for i in $(seq 1 60); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/health || echo "000")
+            echo "Tentativa $i: status=$STATUS"
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ API pronta!"
+              break
+            fi
+            sleep 2
+          done
+          # Falha explicitamente se a API não respondeu
+          curl -f http://localhost:8080/health || (echo "❌ API não respondeu a tempo!" && exit 1)
+
+      - name: 🥋 Rodar Testes Karate (ambiente local Docker)
         run: |
           cd backend
-          # Por padrão, isso usará env='dev' e baterá no localhost:8080 do docker-compose
-          mvn test -Dtest=KarateTest
-
-      # (OPCIONAL) Se você quiser que a Pipeline teste DIRETAMENTE o que está no Render
-      # basta descomentar a linha abaixo. 
-      # Mas cuidado: isso vai inserir dados de teste no seu banco de dados de produção!
-      #
-      # - name: 🥋 Rodar Testes de API (Karate) contra o RENDER
-      #   run: |
-      #     cd backend
-      #     mvn test -Dtest=KarateTest -Dkarate.env=prd
+          mvn test -Dtest=KarateTest -Dkarate.env=dev

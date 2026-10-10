@@ -4,9 +4,10 @@ Feature: API de Clientes da Ficha Digital
     # A URL base agora é puxada do karate-config.js automaticamente
     * url apiUrl
     
-    # 1. Faz o Login na API para pegar o Token
-    # OBS: Substitua o email e senha abaixo pelas credenciais que existem no seu banco local/teste
-    * def loginPayload = { email: 'admin@suafarmacia.com', senha: 'SenhaForteDe16CaracteresOuMais!' }
+    # 1. Faz o Login usando as credenciais do karate-config.js
+    # Em 'dev': usa os valores do próprio arquivo de config
+    # Em 'prd': usa os Secrets do GitHub (KARATE_ADMIN_EMAIL / KARATE_ADMIN_PASSWORD)
+    * def loginPayload = { email: '#(adminEmail)', senha: '#(adminPassword)' }
     * path 'auth/login'
     * request loginPayload
     * method post

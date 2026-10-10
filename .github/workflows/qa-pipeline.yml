@@ -29,7 +29,13 @@ jobs:
       - name: 🐳 Subir Banco + API no Docker
         run: |
           cp .env.example .env
-          docker compose up -d db api
+          # Retry até 3 vezes para lidar com rate limiting transitório do Maven Central
+          for attempt in 1 2 3; do
+            echo "Tentativa $attempt de build Docker..."
+            docker compose up -d --build db api && break
+            echo "Falhou, aguardando 30s antes de tentar novamente..."
+            sleep 30
+          done
 
       - name: ⏳ Aguardar API estar 100% pronta
         run: |

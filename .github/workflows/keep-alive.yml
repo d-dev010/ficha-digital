@@ -1,0 +1,35 @@
+name: Keep API Alive
+
+# Dispara a cada 10 minutos cobrindo 07h00–21h50 de Brasília (UTC-3).
+# Em UTC: 10h–00h → "*/10 10-23,0 * * *"
+#   10:00 UTC = 07:00 BRT  |  00:50 UTC = 21:50 BRT
+on:
+  schedule:
+    - cron: "*/10 10-23,0 * * *"
+  workflow_dispatch: # permite rodar manualmente pelo GitHub UI
+
+jobs:
+  ping:
+    name: Ping /health
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Ping com retry (até 3 tentativas, 20s de espera entre elas)
+        env:
+          HEALTH_URL: ${{ secrets.API_HEALTH_URL }}
+        run: |
+          for attempt in 1 2 3; do
+            echo "Tentativa $attempt de 3..."
+            if curl -fsS --max-time 60 "$HEALTH_URL"; then
+              echo ""
+              echo "✅ API respondeu com sucesso na tentativa $attempt."
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              echo "⏳ Falhou. Aguardando 20s antes de tentar novamente..."
+              sleep 20
+            fi
+          done
+          echo "❌ API não respondeu após 3 tentativas."
+          exit 1

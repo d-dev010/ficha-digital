@@ -62,6 +62,10 @@ export class AdminComponent implements OnInit {
   formSenha: FormGroup;
 
   constructor() {
+    // Aquecimento: acorda a API do Render (plano gratuito hiberna após ~15 min).
+    // Disparado ao carregar o painel admin; erro silencioso para não afetar a UX.
+    fetch('/health').catch(() => {});
+
     this.formFarmacia = this.fb.group({
       nomeFarmacia: ['', Validators.required],
       cnpj: [''],

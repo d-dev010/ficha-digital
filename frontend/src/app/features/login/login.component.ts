@@ -34,7 +34,11 @@ export class LoginComponent {
   constructor(
     private auth: AuthService,
     private router: Router,
-  ) {}
+  ) {
+    // Aquecimento: acorda a API do Render (plano gratuito hiberna após ~15 min).
+    // Disparado ao carregar a tela de login; erro silencioso para não afetar a UX.
+    fetch('/health').catch(() => {});
+  }
 
   entrar() {
     if (this.form.invalid) return;

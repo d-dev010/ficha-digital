@@ -61,8 +61,8 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Rotas públicas (registro e login)
-                        .requestMatchers(HttpMethod.GET, "/").permitAll()
+                        // Rotas públicas (health check, registro e login)
+                        .requestMatchers(HttpMethod.GET, "/", "/health").permitAll()
                         .requestMatchers(HttpMethod.POST, "/farmacias").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         // Swagger UI

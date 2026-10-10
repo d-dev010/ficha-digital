@@ -1,0 +1,50 @@
+name: QA Automation Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test-api:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout do Código
+        uses: actions/checkout@v3
+
+      - name: ☕ Setup do Java (JDK 17)
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: 🐳 Subir a API no Docker (Ambiente de Teste CI)
+        run: |
+          # Copia o env de exemplo para o .env real para que o docker-compose consiga subir
+          cp .env.example .env
+          docker-compose up -d db api
+          
+      - name: ⏳ Aguardar a API ficar pronta
+        run: |
+          echo "Aguardando a API inicializar na porta 8080..."
+          # Tenta fazer um curl na porta 8080 até responder (timeout de 60s)
+          timeout 60s bash -c 'until curl -s http://localhost:8080 > /dev/null; do sleep 2; done' || true
+          echo "API Pronta!"
+
+      - name: 🥋 Rodar Testes de API (Karate)
+        run: |
+          cd backend
+          # Por padrão, isso usará env='dev' e baterá no localhost:8080 do docker-compose
+          mvn test -Dtest=KarateTest
+
+      # (OPCIONAL) Se você quiser que a Pipeline teste DIRETAMENTE o que está no Render
+      # basta descomentar a linha abaixo. 
+      # Mas cuidado: isso vai inserir dados de teste no seu banco de dados de produção!
+      #
+      # - name: 🥋 Rodar Testes de API (Karate) contra o RENDER
+      #   run: |
+      #     cd backend
+      #     mvn test -Dtest=KarateTest -Dkarate.env=prd

@@ -19,6 +19,12 @@ jobs:
         env:
           HEALTH_URL: ${{ secrets.API_HEALTH_URL }}
         run: |
+          if [ -z "$HEALTH_URL" ]; then
+            echo "❌ ERRO: O secret 'API_HEALTH_URL' não está configurado neste repositório."
+            echo "   Acesse: Settings → Secrets and variables → Actions → New repository secret"
+            echo "   Nome: API_HEALTH_URL  |  Valor: https://sua-api.com/health"
+            exit 1
+          fi
           for attempt in 1 2 3; do
             echo "Tentativa $attempt de 3..."
             if curl -fsS --max-time 60 "$HEALTH_URL"; then

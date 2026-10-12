@@ -20,7 +20,9 @@ Feature: Setup de Farmácia para Testes
     Then status 201
 
     # Agora faz login com o dono recém-criado
-    Given path 'auth/login'
+    # Nota: resetamos explicitamente a url para evitar acúmulo de path do Karate
+    Given url apiUrl
+    And path 'auth/login'
     And request { email: 'dono.karate@teste.com', senha: 'Senha@Teste123' }
     When method post
     Then status 200

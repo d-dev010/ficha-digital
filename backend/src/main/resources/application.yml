@@ -8,8 +8,10 @@ spring:
       connection-timeout: 10000        # falha em 10s em vez de travar 14 min
       initialization-fail-timeout: 15000
       # Neon (PgBouncer pooler) requer sslmode=require e prepareThreshold=0
+      # Docker/local usa sslmode=disable (PostgreSQL sem SSL)
+      # Render/Neon: definir SPRING_DATASOURCE_SSLMODE=require nas env vars
       data-source-properties:
-        sslmode: require
+        sslmode: ${SPRING_DATASOURCE_SSLMODE:disable}
         prepareThreshold: 0
   jpa:
     hibernate:

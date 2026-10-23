@@ -69,7 +69,7 @@ public class RelatorioController {
                 : "";
 
         String sql = """
-                SELECT c.nome AS cliente,
+                SELECT cliente,
                        tipo,
                        valor,
                        descricao,
@@ -77,12 +77,12 @@ public class RelatorioController {
                        nome_usuario,
                        pessoa_retirou
                   FROM (
-                         SELECT c.nome,
-                                'LANCAMENTO'   AS tipo,
+                         SELECT c.nome          AS cliente,
+                                'LANCAMENTO'    AS tipo,
                                 l.valor,
                                 l.descricao,
                                 l.data,
-                                u.nome         AS nome_usuario,
+                                u.nome          AS nome_usuario,
                                 l.pessoa_retirou
                            FROM lancamento l
                            JOIN cliente c  ON c.id = l.cliente_id
@@ -90,13 +90,13 @@ public class RelatorioController {
                           WHERE c.farmacia_id = :farmaciaId
                           """ + filtroMes + """
                          UNION ALL
-                         SELECT c.nome,
-                                'PAGAMENTO'    AS tipo,
+                         SELECT c.nome          AS cliente,
+                                'PAGAMENTO'     AS tipo,
                                 p.valor,
-                                NULL           AS descricao,
+                                NULL            AS descricao,
                                 p.data,
-                                u.nome         AS nome_usuario,
-                                NULL           AS pessoa_retirou
+                                u.nome          AS nome_usuario,
+                                NULL            AS pessoa_retirou
                            FROM pagamento p
                            JOIN cliente c  ON c.id = p.cliente_id
                            JOIN usuario u  ON u.id = p.usuario_id
@@ -105,6 +105,7 @@ public class RelatorioController {
                        ) AS mov
                  ORDER BY data DESC
                 """;
+
 
         Query query = em.createNativeQuery(sql)
                 .setParameter("farmaciaId", farmaciaId);
@@ -117,9 +118,10 @@ public class RelatorioController {
         List<Object[]> rows = query.getResultList();
 
         StringBuilder csv = new StringBuilder();
-        // BOM UTF-8 para compatibilidade com Excel
+        // BOM UTF-8 + diretiva sep para Excel abrir com ; como separador automaticamente (PT-BR)
         csv.append('\uFEFF');
-        csv.append("Cliente,Tipo,Data,Hora,Valor (R$),Descricao,Responsavel,Pessoa que Retirou\n");
+        csv.append("sep=;\n");
+        csv.append("Cliente;Tipo;Data;Hora;Valor (R$);Descricao;Responsavel;Pessoa que Retirou\n");
 
         for (Object[] r : rows) {
             Instant data = toInstant(r[4]);
@@ -129,13 +131,13 @@ public class RelatorioController {
             String responsavel = csvField((String) r[5]);
             String retirou     = csvField((String) r[6]);
 
-            csv.append(csvField((String) r[0])).append(',')
-               .append(tipo).append(',')
-               .append(DATE_FMT.format(data)).append(',')
-               .append(TIME_FMT.format(data)).append(',')
-               .append(valor).append(',')
-               .append(descricao).append(',')
-               .append(responsavel).append(',')
+            csv.append(csvField((String) r[0])).append(';')
+               .append(tipo).append(';')
+               .append(DATE_FMT.format(data)).append(';')
+               .append(TIME_FMT.format(data)).append(';')
+               .append(valor).append(';')
+               .append(descricao).append(';')
+               .append(responsavel).append(';')
                .append(retirou).append('\n');
         }
 

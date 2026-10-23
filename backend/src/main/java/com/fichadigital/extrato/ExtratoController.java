@@ -222,9 +222,10 @@ public class ExtratoController {
                 .withZone(ZoneId.of("America/Sao_Paulo"));
 
         StringBuilder csv = new StringBuilder();
-        // BOM UTF-8 para compatibilidade com Excel
+        // BOM UTF-8 + diretiva sep para Excel abrir com ; como separador automaticamente (PT-BR)
         csv.append('\uFEFF');
-        csv.append("Tipo,Data,Hora,Valor (R$),Descricao,Responsavel,Pessoa que Retirou\n");
+        csv.append("sep=;\n");
+        csv.append("Tipo;Data;Hora;Valor (R$);Descricao;Responsavel;Pessoa que Retirou\n");
 
         for (Object[] r : rows) {
             Instant data;
@@ -242,14 +243,15 @@ public class ExtratoController {
             String responsavel = csvField((String) r[4]);
             String retirou     = csvField((String) r[5]);
 
-            csv.append(tipo).append(',')
-               .append(dateFmt.format(data)).append(',')
-               .append(timeFmt.format(data)).append(',')
-               .append(valor).append(',')
-               .append(descricao).append(',')
-               .append(responsavel).append(',')
+            csv.append(tipo).append(';')
+               .append(dateFmt.format(data)).append(';')
+               .append(timeFmt.format(data)).append(';')
+               .append(valor).append(';')
+               .append(descricao).append(';')
+               .append(responsavel).append(';')
                .append(retirou).append('\n');
         }
+
 
         byte[] bytes = csv.toString().getBytes(StandardCharsets.UTF_8);
 

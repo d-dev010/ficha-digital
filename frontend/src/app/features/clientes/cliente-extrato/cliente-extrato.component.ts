@@ -13,6 +13,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ClientesService } from '../clientes.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ClienteDetalhe } from '../../../core/models/cliente.model';
@@ -22,6 +24,11 @@ import { LancarFiadoDialogComponent } from './lancar-fiado-dialog.component';
 import { RegistrarPagamentoDialogComponent } from './registrar-pagamento-dialog.component';
 import { EditarTelefoneDialogComponent } from './editar-telefone-dialog.component';
 import { ConfirmarExclusaoDialogComponent } from './confirmar-exclusao-dialog.component';
+import { RelatorioService } from '../../../core/services/relatorio.service';
+import {
+  SelecionarMesDialogComponent,
+  SelecionarMesDialogResult,
+} from '../../../shared/dialogs/selecionar-mes-dialog.component';
 
 @Component({
   selector: 'app-cliente-extrato',
@@ -29,7 +36,8 @@ import { ConfirmarExclusaoDialogComponent } from './confirmar-exclusao-dialog.co
   imports: [
     CommonModule, MatToolbarModule, MatButtonModule, MatIconModule,
     MatCardModule, MatListModule, MatDividerModule, MatProgressSpinnerModule,
-    MatDialogModule, MatChipsModule, MatTooltipModule, CurrencyBrPipe,
+    MatDialogModule, MatChipsModule, MatTooltipModule, MatMenuModule,
+    MatSnackBarModule, CurrencyBrPipe,
   ],
   templateUrl: './cliente-extrato.component.html',
   styleUrl: './cliente-extrato.component.scss',
@@ -45,6 +53,8 @@ export class ClienteExtratoComponent implements OnInit {
     private router: Router,
     private clientesService: ClientesService,
     private dialog: MatDialog,
+    private snackBar: MatSnackBar,
+    private relatorioService: RelatorioService,
     public auth: AuthService,
   ) {}
 
@@ -116,5 +126,45 @@ export class ClienteExtratoComponent implements OnInit {
 
   voltar() {
     this.router.navigate(['/clientes']);
+  }
+
+  // ── Exportar CSV ─────────────────────────────────────────────────────────
+
+  exportarCsvMes() {
+    const ref = this.dialog.open(SelecionarMesDialogComponent, {
+      width: '92vw',
+      maxWidth: '360px',
+      data: { titulo: 'Exportar CSV do Mês' },
+    });
+    ref.afterClosed().subscribe((result: SelecionarMesDialogResult | undefined) => {
+      if (!result) return;
+      this.relatorioService
+        .csvCliente(this.clienteId, result.mes, result.ano)
+        .subscribe({
+          next: (blob) => {
+            const nomeCliente = (this.cliente()?.nome ?? 'cliente')
+              .toLowerCase()
+              .replace(/\s+/g, '-');
+            const filename = `extrato-${nomeCliente}-${String(result.mes).padStart(2, '0')}-${result.ano}.csv`;
+            this.relatorioService.download(blob, filename);
+          },
+          error: () =>
+            this.snackBar.open('Erro ao gerar CSV. Tente novamente.', 'Fechar', { duration: 3500 }),
+        });
+    });
+  }
+
+  exportarCsvCompleto() {
+    this.relatorioService.csvCliente(this.clienteId).subscribe({
+      next: (blob) => {
+        const nomeCliente = (this.cliente()?.nome ?? 'cliente')
+          .toLowerCase()
+          .replace(/\s+/g, '-');
+        const filename = `extrato-${nomeCliente}-completo.csv`;
+        this.relatorioService.download(blob, filename);
+      },
+      error: () =>
+        this.snackBar.open('Erro ao gerar CSV. Tente novamente.', 'Fechar', { duration: 3500 }),
+    });
   }
 }

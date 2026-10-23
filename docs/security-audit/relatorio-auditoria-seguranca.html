@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Relatório de Auditoria de Segurança — Ficha Digital</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 18mm 16mm;
+      @bottom-right {
+        content: counter(page) " / " counter(pages);
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-size: 9pt;
+        color: #64748b;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      background: #ffffff;
+      font-size: 10pt;
+      line-height: 1.55;
+    }
+
+    .cover-page {
+      height: 92vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      page-break-after: always;
+      border-bottom: 3px solid #0f172a;
+      padding-bottom: 20px;
+    }
+
+    .badge-report {
+      display: inline-block;
+      background: #0f172a;
+      color: #38bdf8;
+      font-size: 8.5pt;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      margin-bottom: 24px;
+    }
+
+    h1.cover-title {
+      font-size: 28pt;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.15;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+
+    h2.cover-subtitle {
+      font-size: 13pt;
+      font-weight: 400;
+      color: #475569;
+      margin-bottom: 30px;
+    }
+
+    .meta-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 18px 22px;
+      margin-bottom: 30px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      font-size: 9.5pt;
+    }
+
+    .meta-item strong {
+      display: block;
+      color: #64748b;
+      font-size: 8pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 3px;
+    }
+
+    .meta-item span {
+      color: #0f172a;
+      font-weight: 600;
+    }
+
+    .section-title {
+      font-size: 15pt;
+      font-weight: 700;
+      color: #0f172a;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 6px;
+      margin-top: 26px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+
+    p {
+      margin-bottom: 10px;
+      color: #334155;
+    }
+
+    /* Tabelas */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 20px 0;
+      font-size: 9pt;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: #334155;
+      font-weight: 700;
+      text-align: left;
+      padding: 9px 12px;
+      border: 1px solid #cbd5e1;
+    }
+
+    td {
+      padding: 8px 12px;
+      border: 1px solid #e2e8f0;
+      vertical-align: top;
+    }
+
+    tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+
+    /* Chips de Severidade */
+    .chip {
+      display: inline-block;
+      font-size: 7.5pt;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      color: #ffffff;
+      white-space: nowrap;
+    }
+
+    .chip-critica { background: #B91C1C; }
+    .chip-alta { background: #EA580C; }
+    .chip-media { background: #D97706; }
+    .chip-baixa { background: #2563EB; }
+    .chip-info { background: #64748b; }
+    .chip-forte { background: #059669; }
+
+    /* Gráficos e Resumo */
+    .charts-container {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 18px 0 24px 0;
+      page-break-inside: avoid;
+    }
+
+    .chart-card {
+      flex: 1;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .chart-card h4 {
+      font-size: 9.5pt;
+      color: #1e293b;
+      margin-bottom: 10px;
+    }
+
+    /* Cards de Pontos Fortes e Fracos */
+    .strengths-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 16px 0;
+    }
+
+    .strength-card {
+      background: #f0fdf4;
+      border-left: 4px solid #059669;
+      border-radius: 0 8px 8px 0;
+      padding: 10px 14px;
+      font-size: 8.5pt;
+    }
+
+    .strength-card strong {
+      display: block;
+      color: #065f46;
+      font-size: 9.5pt;
+      margin-bottom: 4px;
+    }
+
+    .weakness-card {
+      background: #fff7ed;
+      border-left: 4px solid #EA580C;
+      border-radius: 0 8px 8px 0;
+      padding: 10px 14px;
+      font-size: 8.5pt;
+    }
+
+    .weakness-card strong {
+      display: block;
+      color: #9a3412;
+      font-size: 9.5pt;
+      margin-bottom: 4px;
+    }
+
+    /* Detalhe dos achados */
+    .finding-block {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      page-break-inside: avoid;
+      overflow: hidden;
+    }
+
+    .finding-header {
+      background: #f8fafc;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .finding-header h3 {
+      font-size: 10pt;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .finding-body {
+      padding: 12px 14px;
+      font-size: 8.8pt;
+    }
+
+    .code-box {
+      background: #0f172a;
+      color: #f1f5f9;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 8pt;
+      padding: 10px;
+      border-radius: 6px;
+      margin: 8px 0;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+
+    .code-location {
+      display: inline-block;
+      font-family: 'Consolas', monospace;
+      background: #f1f5f9;
+      color: #0369a1;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 8pt;
+      margin-bottom: 6px;
+    }
+
+    /* Issues Section */
+    .issue-wrapper {
+      background: #f8fafc;
+      border: 1.5px dashed #94a3b8;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 18px;
+      page-break-inside: avoid;
+    }
+
+    .issue-header {
+      font-size: 8pt;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .issue-text {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: 'Consolas', monospace;
+      font-size: 8pt;
+      white-space: pre-wrap;
+      color: #0f172a;
+      line-height: 1.45;
+    }
+
+    .p-chip {
+      display: inline-block;
+      font-size: 8pt;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      margin-right: 6px;
+      color: white;
+    }
+    .p1 { background: #b91c1c; }
+    .p2 { background: #ea580c; }
+    .p3 { background: #d97706; }
+    .p4 { background: #2563eb; }
+  </style>
+</head>
+<body>
+
+  <!-- ================= CAPA ================= -->
+  <div class="cover-page">
+    <div>
+      <span class="badge-report">Auditoria de Segurança Defensiva</span>
+      <h1 class="cover-title">Relatório de Auditoria de Segurança</h1>
+      <h2 class="cover-subtitle">Sistema Ficha Digital — Crediário & Fiado Farmacêutico</h2>
+
+      <div class="meta-box">
+        <div class="meta-grid">
+          <div class="meta-item">
+            <strong>Data da Emissão</strong>
+            <span>12 de Outubro de 2026</span>
+          </div>
+          <div class="meta-item">
+            <strong>Classificação</strong>
+            <span>Confidencial / Uso Interno</span>
+          </div>
+          <div class="meta-item">
+            <strong>Linguagens & Frameworks</strong>
+            <span>Java 17 (Spring Boot 3.3.4) & TypeScript (Angular 18)</span>
+          </div>
+          <div class="meta-item">
+            <strong>Persistência & Nuvem</strong>
+            <span>PostgreSQL 16 (Neon DB) / Docker / Render / Vercel</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 10px;">
+        <h3 style="font-size: 11pt; color: #0f172a; margin-bottom: 8px;">Nota Metodológica & Mapeamento de Stack:</h3>
+        <p style="font-size: 8.8pt; color: #475569; line-height: 1.5;">
+          A auditoria avaliou o código-fonte real sem suposições conceituais. Em cada uma das cinco categorias essenciais, as verificações foram adaptadas à arquitetura do projeto:
+        </p>
+        <ul style="font-size: 8.5pt; color: #334155; margin-left: 18px; line-height: 1.6;">
+          <li><strong>1. Banco Sem Tranca:</strong> Como o PostgreSQL não possui RLS ativado, o isolamento é lógico na camada de aplicação. Avaliamos se o <code>farmaciaId</code> extraído do token JWT pelo <code>JwtAuthFilter</code> é estritamente aplicado em todas as queries JPA e SQL nativas.</li>
+          <li><strong>2. Permissão no Navegador:</strong> Cruzamos todos os route guards do Angular (<code>roleGuard</code>) e blocos condicionais de UI com as anotações <code>@PreAuthorize</code> e rotas de <code>SecurityConfig</code> no Spring Security.</li>
+          <li><strong>3. IDOR:</strong> Percorremos sistematicamente cada rota com parâmetros de caminho (<code>{id}</code>, <code>{clienteId}</code>, <code>{usuarioId}</code>) para confirmar que nenhum recurso de outra farmácia pode ser lido, alterado ou excluído.</li>
+          <li><strong>4. Chaves Expostas:</strong> Verificamos logs de inicialização (<code>System.out.println</code>), arquivos de configuração (<code>application.yml</code>), segredos JWT, scripts de teste de integração (Karate) e variáveis do Docker/CI.</li>
+          <li><strong>5. Inputs Sem Tratamento (XSS & Spoofing):</strong> Auditamos o binding dos templates Angular (ausência de <code>innerHTML</code>) e a manipulação de cabeçalhos de rede não confiáveis (como <code>X-Forwarded-For</code> no rate limiter do login).</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="font-size: 8.5pt; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+      Auditoria realizada de ponta a ponta sobre o repositório <code>ficha-digital</code>.
+    </div>
+  </div>
+
+  <!-- ================= RESUMO EXECUTIVO ================= -->
+  <div>
+    <h2 class="section-title">1. Resumo Executivo e Métricas</h2>
+    <p>
+      O sistema demonstra maturidade técnica consistente em seus fluxos operacionais centrais: o isolamento de dados entre farmácias está implementado com rigor em todas as operações de clientes e movimentações financeiras, as senhas usam hash BCrypt com salt e o frontend Angular conta com proteções automáticas nativas contra XSS. Foram identificados, contudo, pontos de atenção em controles de infraestrutura, rate limiting e observabilidade que demandam remediação.
+    </p>
+
+    <!-- Gráficos SVG Inline -->
+    <div class="charts-container">
+      <!-- Donut Chart -->
+      <div class="chart-card">
+        <h4>Distribuição por Severidade</h4>
+        <svg width="220" height="150" viewBox="0 0 220 150">
+          <!-- Donut chart: Total = 6 findings + 6 strengths = 12 items.
+               Alta: 2 (16.6%), Media: 2 (16.6%), Baixa: 1 (8.3%), Info: 1 (8.3%), Fortes: 6 (50%) -->
+          <circle cx="85" cy="75" r="50" fill="transparent" stroke="#f1f5f9" stroke-width="24" />
+          <!-- Fortes (50%): dasharray = 157.1, offset = 0 -->
+          <circle cx="85" cy="75" r="50" fill="transparent" stroke="#059669" stroke-width="24" stroke-dasharray="157 314" stroke-dashoffset="0" />
+          <!-- Alta (16.6% = 52.3): offset = -157 -->
+          <circle cx="85" cy="75" r="50" fill="transparent" stroke="#EA580C" stroke-width="24" stroke-dasharray="52 314" stroke-dashoffset="-157" />
+          <!-- Media (16.6% = 52.3): offset = -209 -->
+          <circle cx="85" cy="75" r="50" fill="transparent" stroke="#D97706" stroke-width="24" stroke-dasharray="52 314" stroke-dashoffset="-209" />
+          <!-- Baixa (8.3% = 26.1): offset = -261 -->
+          <circle cx="85" cy="75" r="50" fill="transparent" stroke="#2563EB" stroke-width="24" stroke-dasharray="26 314" stroke-dashoffset="-261" />
+          <!-- Info (8.3% = 26.1): offset = -287 -->
+          <circle cx="85" cy="75" r="50" fill="transparent" stroke="#64748b" stroke-width="24" stroke-dasharray="26 314" stroke-dashoffset="-287" />
+
+          <!-- Centro do donut -->
+          <text x="85" y="72" text-anchor="middle" font-size="16" font-weight="bold" fill="#0f172a">6</text>
+          <text x="85" y="86" text-anchor="middle" font-size="8" fill="#64748b">ACHADOS</text>
+
+          <!-- Legenda -->
+          <g transform="translate(150, 25)" font-size="8.5" font-family="sans-serif">
+            <rect x="0" y="0" width="8" height="8" rx="2" fill="#B91C1C"/>
+            <text x="12" y="7" fill="#334155">Crítica (0)</text>
+            <rect x="0" y="18" width="8" height="8" rx="2" fill="#EA580C"/>
+            <text x="12" y="25" fill="#334155">Alta (2)</text>
+            <rect x="0" y="36" width="8" height="8" rx="2" fill="#D97706"/>
+            <text x="12" y="43" fill="#334155">Média (2)</text>
+            <rect x="0" y="54" width="8" height="8" rx="2" fill="#2563EB"/>
+            <text x="12" y="61" fill="#334155">Baixa (1)</text>
+            <rect x="0" y="72" width="8" height="8" rx="2" fill="#64748b"/>
+            <text x="12" y="79" fill="#334155">Info (1)</text>
+            <rect x="0" y="90" width="8" height="8" rx="2" fill="#059669"/>
+            <text x="12" y="97" fill="#334155">Fortes (6)</text>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Bar Chart -->
+      <div class="chart-card">
+        <h4>Achados por Categoria Auditada</h4>
+        <svg width="250" height="150" viewBox="0 0 250 150">
+          <g font-size="8" fill="#475569" font-family="sans-serif">
+            <text x="10" y="22">1. Isolamento Tenant</text>
+            <rect x="115" y="13" width="30" height="12" rx="3" fill="#D97706" />
+            <text x="150" y="22" font-weight="bold" fill="#0f172a">1 (Média)</text>
+
+            <text x="10" y="47">2. Permissão Navegador</text>
+            <rect x="115" y="38" width="30" height="12" rx="3" fill="#64748b" />
+            <text x="150" y="47" font-weight="bold" fill="#0f172a">1 (Info)</text>
+
+            <text x="10" y="72">3. IDOR / Escopo</text>
+            <rect x="115" y="63" width="30" height="12" rx="3" fill="#2563EB" />
+            <text x="150" y="72" font-weight="bold" fill="#0f172a">1 (Baixa)</text>
+
+            <text x="10" y="97">4. Chaves & Segredos</text>
+            <rect x="115" y="88" width="60" height="12" rx="3" fill="#EA580C" />
+            <text x="180" y="97" font-weight="bold" fill="#0f172a">2 (Alta/Méd)</text>
+
+            <text x="10" y="122">5. Inputs & Spoofing</text>
+            <rect x="115" y="113" width="60" height="12" rx="3" fill="#EA580C" />
+            <text x="180" y="122" font-weight="bold" fill="#0f172a">2 (Alta/Méd)</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Tabela Resumo -->
+    <table>
+      <thead>
+        <tr>
+          <th>Severidade</th>
+          <th>Total</th>
+          <th>Impacto Principal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="chip chip-critica">Crítica</span></td>
+          <td><strong>0</strong></td>
+          <td>Nenhum vetor de exploração remota sem autenticação capaz de compromisso total imediato.</td>
+        </tr>
+        <tr>
+          <td><span class="chip chip-alta">Alta</span></td>
+          <td><strong>2</strong></td>
+          <td>Bypass completo de proteção de força bruta no login e vazamento de senha de prod nos logs.</td>
+        </tr>
+        <tr>
+          <td><span class="chip chip-media">Média</span></td>
+          <td><strong>2</strong></td>
+          <td>Defaults públicos de e-mail de admin e DTOs de escrita sem restrição de tamanho de input.</td>
+        </tr>
+        <tr>
+          <td><span class="chip chip-baixa">Baixa</span></td>
+          <td><strong>1</strong></td>
+          <td>Falta de trava de auto-exclusão e auto-desativação do Super Admin autenticado.</td>
+        </tr>
+        <tr>
+          <td><span class="chip chip-info">Informativa</span></td>
+          <td><strong>1</strong></td>
+          <td>Divergência entre o guard de rotas do Angular e os endpoints do backend para Super Admin.</td>
+        </tr>
+        <tr>
+          <td><span class="chip chip-forte">Ponto Forte</span></td>
+          <td><strong>6</strong></td>
+          <td>Isolamento multi-tenant, BCrypt, fail-fast JWT, proteção nativa contra XSS e SQL Injection.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ================= PONTOS FORTES E FRACOS ================= -->
+  <div class="page-break">
+    <h2 class="section-title">2. Pontos Fortes e Riscos Centrais</h2>
+
+    <div class="strengths-grid">
+      <div class="strength-card">
+        <strong>✓ Isolamento Multi-tenant Rigoroso</strong>
+        Todas as operações em <code>ClienteRepository</code>, <code>LancamentoService</code>, <code>PagamentoService</code> e <code>ExtratoController</code> filtram obrigatoriamente por <code>farmacia_id</code> originado do JWT.
+      </div>
+      <div class="strength-card">
+        <strong>✓ Hashes de Senha Seguros (BCrypt)</strong>
+        O Spring Security criptografa senhas com BCrypt de força 10. Em nenhum ponto da aplicação a senha transita em texto puro para o banco e os DTOs nunca expõem <code>senhaHash</code>.
+      </div>
+      <div class="strength-card">
+        <strong>✓ Fail-Fast no Segredo JWT</strong>
+        O <code>JwtService.java</code> rejeita tokens caso a chave tenha menos de 32 bytes (256 bits para HMAC-SHA256), impedindo assinaturas vulneráveis a ataques offline.
+      </div>
+      <div class="strength-card">
+        <strong>✓ Proteção Automática Contra XSS</strong>
+        O Angular 18 realiza escape contextual de variáveis em todos os templates. O código não utiliza <code>innerHTML</code> nem bypasses no <code>DomSanitizer</code>.
+      </div>
+      <div class="strength-card">
+        <strong>✓ Prevenção Contra SQL Injection</strong>
+        Todas as queries (inclusive queries nativas com <code>UNION ALL</code>) utilizam binding de parâmetros nomeados JPA/Hibernate, inviabilizando injeção de comandos SQL.
+      </div>
+      <div class="strength-card">
+        <strong>✓ Controle de Concorrência com Lock Otimista</strong>
+        A entidade <code>Cliente</code> utiliza anotação <code>@Version</code> para gerenciar atualizações simultâneas de saldo, impedindo condições de corrida de débito/crédito.
+      </div>
+    </div>
+
+    <h3 style="font-size: 11pt; color: #0f172a; margin: 18px 0 8px 0;">Riscos Centrais Identificados:</h3>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div class="weakness-card">
+        <strong>⚠ Spoofing de IP no Rate Limiter de Login</strong>
+        O serviço de autenticação consome o cabeçalho <code>X-Forwarded-For</code> sem validação prévia de proxies reversos confiáveis e não aplica rate limit indexado por e-mail, permitindo ataques de força bruta contínuos.
+      </div>
+      <div class="weakness-card">
+        <strong>⚠ Vazamento de Material de Senha em Logs</strong>
+        O inicializador de banco emite via <code>System.out.println</code> o e-mail e os três primeiros caracteres da senha de produção do Super Admin no console do container.
+      </div>
+      <div class="weakness-card">
+        <strong>⚠ Ausência de Camada de RLS no Banco de Dados</strong>
+        Não há Row-Level Security no PostgreSQL. A integridade multi-tenant reside inteiramente no código Java. Qualquer query futura construída sem o filtro por farmácia acarretará vazamento inter-tenant.
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= DETALHE DOS ACHADOS ================= -->
+  <div class="page-break">
+    <h2 class="section-title">3. Detalhamento Técnico dos Achados</h2>
+
+    <!-- ACHADO 1 -->
+    <div class="finding-block">
+      <div class="finding-header">
+        <h3>1. Bypass de Rate Limiting no Login via Spoofing do Cabeçalho X-Forwarded-For</h3>
+        <span class="chip chip-alta">ALTA</span>
+      </div>
+      <div class="finding-body">
+        <span class="code-location">backend/src/main/java/com/fichadigital/auth/AuthService.java:50-55, 73-77</span>
+        <p><strong>Descrição:</strong> O método <code>getClientIp()</code> lê o cabeçalho <code>X-Forwarded-For</code> fornecido pelo cliente e extrai o primeiro endereço sem verificar se a requisição originou-se de um proxy reverso confiável. Além disso, o Bucket4j aloca buckets exclusivamente com base nessa string de IP.</p>
+        <div class="code-box">private String getClientIp() {
+    String xfHeader = httpServletRequest.getHeader("X-Forwarded-For");
+    if (xfHeader == null || xfHeader.isEmpty()) {
+        return httpServletRequest.getRemoteAddr();
+    }
+    return xfHeader.split(",")[0].trim();
+}</div>
+        <p><strong>Por que é explorável:</strong> Um atacante pode enviar requisições contínuas de login alternando o valor do cabeçalho (ex: <code>X-Forwarded-For: 1.1.1.1</code>, <code>X-Forwarded-For: 1.1.1.2</code>). Como o bucket é indexado por IP e não pelo e-mail alvo, o limite de 5 tentativas a cada 5 minutos é zerado a cada requisição, viabilizando ataques de força bruta ilimitados contra contas DONO e SUPER_ADMIN.</p>
+      </div>
+    </div>
+
+    <!-- ACHADO 2 -->
+    <div class="finding-block">
+      <div class="finding-header">
+        <h3>2. Vazamento de Prefixo de Senha de Produção do Super Admin em Logs / STDOUT</h3>
+        <span class="chip chip-alta">ALTA</span>
+      </div>
+      <div class="finding-body">
+        <span class="code-location">backend/src/main/java/com/fichadigital/config/AdminInitializer.java:38-43</span>
+        <p><strong>Descrição:</strong> Durante a inicialização da aplicação, o componente <code>AdminInitializer</code> imprime no console padrão os três primeiros caracteres da senha de produção configurada para o Super Admin e o endereço de e-mail.</p>
+        <div class="code-box">String senhaPreview = adminPassword != null && adminPassword.length() >= 3
+        ? adminPassword.substring(0, 3) + "***"
+        : "(vazia ou nula)";
+System.out.println("[AdminInitializer] Email lido: " + adminEmail);
+System.out.println("[AdminInitializer] Senha começa com: " + senhaPreview);</div>
+        <p><strong>Por que é explorável:</strong> Em ambientes de nuvem (Render, AWS, GCP), saídas de <code>stdout</code> são gravadas em agregadores de telemetria acessíveis a operadores e ferramentas terceiras. Expor o prefixo de uma senha reduz dramaticamente a entropia do segredo para tentativas de quebra offline (CWE-532).</p>
+      </div>
+    </div>
+
+    <!-- ACHADO 3 -->
+    <div class="finding-block">
+      <div class="finding-header">
+        <h3>3. Credenciais Padrão Conhecidas e E-mail de Admin com Fallback Inseguro</h3>
+        <span class="chip chip-media">MÉDIA</span>
+      </div>
+      <div class="finding-body">
+        <span class="code-location">backend/src/main/java/com/fichadigital/config/AdminInitializer.java:24-25, karate-config.js:13-14</span>
+        <p><strong>Descrição:</strong> O <code>AdminInitializer</code> define como fallback o e-mail <code>admin@fichadigital.com</code> caso <code>ADMIN_EMAIL</code> não seja especificado. Ao mesmo tempo, o template <code>.env.example</code> e o arquivo <code>karate-config.js</code> documentam senhas estáticas padronizadas (<code>SenhaForteDe16CaracteresOuMais!</code>), as quais são copiadas para o arquivo <code>.env</code> no fluxo de CI.</p>
+        <div class="code-box">@Value("${ADMIN_EMAIL:admin@fichadigital.com}")
+private String adminEmail;</div>
+        <p><strong>Por que é explorável:</strong> Caso um deploy em staging ou produção omita as variáveis específicas, uma conta de administração global com credenciais previsíveis ou públicas poderá ser provisionada silenciosamente.</p>
+      </div>
+    </div>
+
+    <!-- ACHADO 4 -->
+    <div class="finding-block">
+      <div class="finding-header">
+        <h3>4. Ausência de Validação de Input em DTOs de Escrita de Clientes e Lançamentos</h3>
+        <span class="chip chip-media">MÉDIA</span>
+      </div>
+      <div class="finding-body">
+        <span class="code-location">ClienteController.java:91-97, AtualizarTelefoneRequest.java:7, LancarFiadoRequest.java:17,20</span>
+        <p><strong>Descrição:</strong> O endpoint <code>PATCH /clientes/{id}/telefone</code> não contém a anotação <code>@Valid</code> no parâmetro de request, e os campos <code>descricao</code> e <code>pessoaRetirou</code> em lançamentos de fiado não possuem limites declarados de tamanho.</p>
+        <p><strong>Por que é explorável:</strong> O envio de telefones com mais de 20 caracteres dispara uma <code>DataException</code> no PostgreSQL resultando em erro 500 no lugar de 400 Bad Request. Já a inserção de payloads massivos em descrições pode causar sobrecarga de memória e esgotamento de disco desnecessários.</p>
+      </div>
+    </div>
+
+    <!-- ACHADO 5 -->
+    <div class="finding-block">
+      <div class="finding-header">
+        <h3>5. Ausência de Trava de Auto-Operação e Auto-Exclusão no Painel de Administração</h3>
+        <span class="chip chip-baixa">BAIXA</span>
+      </div>
+      <div class="finding-body">
+        <span class="code-location">backend/src/main/java/com/fichadigital/admin/AdminService.java:101-115</span>
+        <p><strong>Descrição:</strong> Os métodos <code>alterarStatus</code> e <code>excluirUsuario</code> não verificam se o <code>usuarioId</code> informado corresponde à conta do próprio Super Admin autenticado.</p>
+        <p><strong>Por que é explorável:</strong> Um administrador pode inadvertidamente desativar ou excluir a si mesmo, ocasionando o bloqueio acidental (lockout) de todas as contas administrativas sem possibilidade de recuperação sem intervenção manual no banco.</p>
+      </div>
+    </div>
+
+    <!-- ACHADO 6 -->
+    <div class="finding-block">
+      <div class="finding-header">
+        <h3>6. Descompasso de Permissões entre Frontend e Backend para Perfil SUPER_ADMIN</h3>
+        <span class="chip chip-info">INFORMATIVA</span>
+      </div>
+      <div class="finding-body">
+        <span class="code-location">frontend/src/app/core/auth/role.guard.ts:18, FarmaciaController.java:45</span>
+        <p><strong>Descrição:</strong> O <code>roleGuard</code> do Angular autoriza irrestritamente o acesso do <code>SUPER_ADMIN</code> a todas as páginas da aplicação, incluindo a rota <code>/dashboard</code> (exclusiva de farmácia). No entanto, o backend exige <code>hasRole('DONO')</code> e tenta invocar <code>SecurityUtils.farmaciaId()</code>, falhando com 403 e gerando <code>NullPointerException</code> se invocado diretamente.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= RECOMENDAÇÕES PRIORIZADAS ================= -->
+  <div class="page-break">
+    <h2 class="section-title">4. Recomendações Priorizadas de Correção</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Prioridade</th>
+          <th>Ação de Remediação</th>
+          <th>Esforço Estimado</th>
+          <th>Arquivos Afetados</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="p-chip p1">P1</span> <strong>Imediata</strong></td>
+          <td>
+            <strong>Corrigir Rate Limiting de Login & Remover Logs de Senha:</strong>
+            <br>Indexar o Bucket4j pelo e-mail do usuário além do IP. Desativar a leitura de <code>X-Forwarded-For</code> cru. Remover os <code>System.out.println</code> com fragmentos de senha no <code>AdminInitializer</code>.
+          </td>
+          <td>Baixo (1–2 horas)</td>
+          <td><code>AuthService.java</code><br><code>AdminInitializer.java</code></td>
+        </tr>
+        <tr>
+          <td><span class="p-chip p2">P2</span> <strong>Curto Prazo</strong></td>
+          <td>
+            <strong>Validação Estrita de Input nos DTOs:</strong>
+            <br>Adicionar <code>@Valid</code> no endpoint de atualização de telefone e incluir anotações <code>@Size(max = 20)</code> e <code>@Size(max = 255)</code> nos DTOs de lançamentos e clientes.
+          </td>
+          <td>Baixo (1 hora)</td>
+          <td><code>ClienteController.java</code><br><code>AtualizarTelefoneRequest.java</code><br><code>LancarFiadoRequest.java</code></td>
+        </tr>
+        <tr>
+          <td><span class="p-chip p3">P3</span> <strong>Médio Prazo</strong></td>
+          <td>
+            <strong>Bloqueio de Auto-Deleção e Alinhamento de Guards:</strong>
+            <br>Impedir que administradores alterem o status ou deletem o próprio ID. Ajustar o <code>roleGuard</code> do Angular para direcionar o Super Admin ao <code>/admin</code>.
+          </td>
+          <td>Médio (2–3 horas)</td>
+          <td><code>AdminService.java</code><br><code>role.guard.ts</code></td>
+        </tr>
+        <tr>
+          <td><span class="p-chip p4">P4</span> <strong>Arquitetural</strong></td>
+          <td>
+            <strong>Habilitação de Row-Level Security (RLS) no PostgreSQL:</strong>
+            <br>Definir políticas de RLS atreladas a <code>farmacia_id</code> no PostgreSQL para criar uma segunda linha de defesa independente do código da aplicação.
+          </td>
+          <td>Alto (4–6 horas)</td>
+          <td>Migrações Flyway (V12)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ================= ISSUES PARA GITHUB ================= -->
+  <div class="page-break">
+    <h2 class="section-title">5. Issues Prontas para o GitHub</h2>
+    <p>Os blocos abaixo estão no formato Markdown pronto para cópia e criação direta no repositório GitHub:</p>
+
+    <!-- ISSUE 1 -->
+    <div class="issue-wrapper">
+      <div class="issue-header">--- ISSUE 1 ---</div>
+      <div class="issue-text">### [Segurança] Corrigir bypass de rate limiting no login via spoofing de X-Forwarded-For
+
+**Labels:** `security`, `severity:high`, `auth`
+
+#### Descrição do Problema
+O método `AuthService.getClientIp()` consome cegamente o cabeçalho HTTP `X-Forwarded-For` enviado pelo cliente. Além disso, o rate limiting do Bucket4j é indexado exclusivamente pelo IP retornado, em vez de aplicar bloqueio pelo e-mail do usuário que está tentando se autenticar. Um atacante pode alternar o cabeçalho `X-Forwarded-For` em cada tentativa de login e realizar ataques de força bruta ilimitados contra qualquer conta.
+
+#### Evidência
+- Arquivo: `backend/src/main/java/com/fichadigital/auth/AuthService.java:50-55, 73-77`
+```java
+private String getClientIp() {
+    String xfHeader = httpServletRequest.getHeader("X-Forwarded-For");
+    if (xfHeader == null || xfHeader.isEmpty()) {
+        return httpServletRequest.getRemoteAddr();
+    }
+    return xfHeader.split(",")[0].trim();
+}
+```
+
+#### Impacto
+Quebra total da proteção contra força bruta e preenchimento de credenciais (*credential stuffing*) em contas privilegiadas (DONO e SUPER_ADMIN).
+
+#### Sugestão de Correção
+1. Aplicar rate limiting composto indexado pelo e-mail do usuário (`email.toLowerCase()`).
+2. Obter o IP remoto de forma segura sem confiar em cabeçalhos forjáveis a menos que a aplicação esteja atrás de um proxy reverso explicitamente configurado no Spring (`server.forward-headers-strategy: framework`).
+
+#### Critérios de Aceite
+- [ ] O Bucket4j aplica limite de 5 tentativas por 5 minutos por e-mail de destino.
+- [ ] Enviar requisições repetidas com `X-Forwarded-For` forjado para o mesmo e-mail resulta em HTTP 429 após 5 tentativas.
+- [ ] Testes automatizados cobrem a tentativa de bypass com múltiplos IPs forjados.</div>
+      <div class="issue-header" style="margin-top: 6px;">--- FIM ISSUE 1 ---</div>
+    </div>
+
+    <!-- ISSUE 2 -->
+    <div class="issue-wrapper">
+      <div class="issue-header">--- ISSUE 2 ---</div>
+      <div class="issue-text">### [Segurança] Remover vazamento de prefixo de senha do Super Admin no log/stdout
+
+**Labels:** `security`, `severity:high`, `secrets`
+
+#### Descrição do Problema
+O componente `AdminInitializer` imprime no `stdout` o e-mail do Super Admin e os três primeiros caracteres da senha real lida das variáveis de ambiente de produção durante o startup da aplicação.
+
+#### Evidência
+- Arquivo: `backend/src/main/java/com/fichadigital/config/AdminInitializer.java:38-43`
+```java
+String senhaPreview = adminPassword != null && adminPassword.length() >= 3
+        ? adminPassword.substring(0, 3) + "***"
+        : "(vazia ou nula)";
+System.out.println("[AdminInitializer] Email lido: " + adminEmail);
+System.out.println("[AdminInitializer] Senha começa com: " + senhaPreview);
+```
+
+#### Impacto
+Vazamento de material de credencial em logs de container e plataformas de hospedagem (Render, CloudWatch), facilitando ataques de força bruta offline e violando o CWE-532.
+
+#### Sugestão de Correção
+Remover completamente os `System.out.println` que exibem detalhes do e-mail e da senha. Registrar apenas uma mensagem genérica via logger configurado: `log.info("Inicialização do Super Admin concluída com sucesso.");`.
+
+#### Critérios de Aceite
+- [ ] Nenhuma informação sobre a senha (nem mesmo prefixos ou máscaras) é emitida no console ou logs.
+- [ ] `System.out.println` substituído por logger SLF4J padrão.
+- [ ] O startup da aplicação em produção não gera saídas com dados sensíveis.</div>
+      <div class="issue-header" style="margin-top: 6px;">--- FIM ISSUE 2 ---</div>
+    </div>
+
+    <!-- ISSUE 3 -->
+    <div class="issue-wrapper">
+      <div class="issue-header">--- ISSUE 3 ---</div>
+      <div class="issue-text">### [Segurança] Adicionar @Valid e limites de tamanho em campos de clientes e lançamentos
+
+**Labels:** `security`, `severity:medium`, `validation`
+
+#### Descrição do Problema
+O endpoint `PATCH /clientes/{id}/telefone` recebe o corpo da requisição sem a anotação `@Valid` e o DTO `AtualizarTelefoneRequest` não possui validação de formato ou tamanho. Adicionalmente, campos de texto livre em `LancarFiadoRequest` (`descricao` e `pessoaRetirou`) não possuem restrição de tamanho máximo.
+
+#### Evidência
+- Arquivo: `backend/src/main/java/com/fichadigital/cliente/ClienteController.java` (Linha 91)
+- Arquivo: `backend/src/main/java/com/fichadigital/cliente/AtualizarTelefoneRequest.java` (Linha 7)
+- Arquivo: `backend/src/main/java/com/fichadigital/lancamento/LancarFiadoRequest.java` (Linhas 17 e 20)
+
+#### Impacto
+- Envio de telefone com mais de 20 caracteres estoura `DataException` no PostgreSQL gerando HTTP 500 em vez de 400 Bad Request.
+- Possibilidade de envio de cargas massivas em `descricao`, causando consumo excessivo de memória ou espaço em disco.
+
+#### Sugestão de Correção
+1. Adicionar `@Valid` no `@RequestBody` de `atualizarTelefone`.
+2. Adicionar `@Size(max = 20)` em `AtualizarTelefoneRequest.telefone`.
+3. Adicionar `@Size(max = 255)` em `LancarFiadoRequest.descricao` e `pessoaRetirou`.
+
+#### Critérios de Aceite
+- [ ] Requisições com telefone > 20 caracteres retornam HTTP 400 com detalhe de validação RFC 9457.
+- [ ] Campos de descrição e pessoaRetirou rejeitam strings superiores a 255 caracteres com HTTP 400.</div>
+      <div class="issue-header" style="margin-top: 6px;">--- FIM ISSUE 3 ---</div>
+    </div>
+
+    <!-- ISSUE 4 -->
+    <div class="issue-wrapper">
+      <div class="issue-header">--- ISSUE 4 ---</div>
+      <div class="issue-text">### [Segurança] Implementar trava de proteção contra auto-desativação e auto-exclusão no Admin
+
+**Labels:** `security`, `severity:low`, `admin`
+
+#### Descrição do Problema
+Os endpoints de gerenciamento de usuários em `AdminService` (`alterarStatus` e `excluirUsuario`) permitem que qualquer Super Admin altere o status ou delete o seu próprio usuário (`usuarioId == usuarioAutenticado.getId()`), ou a conta principal criada pelo inicializador.
+
+#### Evidência
+- Arquivo: `backend/src/main/java/com/fichadigital/admin/AdminService.java:101-115`
+
+#### Impacto
+Risco de lockout permanente da administração do sistema por erro operacional ou manipulação acidental de requisição.
+
+#### Sugestão de Correção
+Validar se `usuarioId.equals(SecurityUtils.usuarioId())` e lançar `IllegalArgumentException("Não é permitido alterar o status ou excluir o próprio usuário logado.")`.
+
+#### Critérios de Aceite
+- [ ] Tentativa de auto-desativação do usuário logado retorna HTTP 409 Conflict com mensagem explicativa.
+- [ ] Tentativa de auto-exclusão do usuário logado é bloqueada.
+- [ ] Outros usuários continuam podendo ser ativados/desativados normalmente.</div>
+      <div class="issue-header" style="margin-top: 6px;">--- FIM ISSUE 4 ---</div>
+    </div>
+  </div>
+
+</body>
+</html>

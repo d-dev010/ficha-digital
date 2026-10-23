@@ -60,6 +60,24 @@
       </button>
     </div>
 
+    <!-- Exportar CSV -->
+    <div class="acoes-exportar">
+      <button mat-stroked-button class="btn-exportar" [matMenuTriggerFor]="menuCsv" id="btn-exportar-csv">
+        <mat-icon>download</mat-icon>
+        Exportar CSV
+      </button>
+      <mat-menu #menuCsv="matMenu">
+        <button mat-menu-item (click)="exportarCsvMes()" id="btn-csv-mes-cliente">
+          <mat-icon>calendar_month</mat-icon>
+          Mês específico
+        </button>
+        <button mat-menu-item (click)="exportarCsvCompleto()" id="btn-csv-completo-cliente">
+          <mat-icon>history</mat-icon>
+          Histórico completo
+        </button>
+      </mat-menu>
+    </div>
+
     @if (auth.perfil() === 'DONO') {
       <div class="acoes-dono">
         <button mat-stroked-button class="btn-excluir-cliente" id="btn-excluir-cliente"

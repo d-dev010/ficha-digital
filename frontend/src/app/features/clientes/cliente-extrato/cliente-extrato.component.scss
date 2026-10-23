@@ -77,6 +77,38 @@
   }
 }
 
+/* ─── Exportar CSV ─── */
+.acoes-exportar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+
+  .btn-exportar {
+    color: #1565c0;
+    border-color: #90caf9;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 8px !important;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 14px;
+    height: 38px;
+    transition: background 0.15s, border-color 0.15s;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    &:hover {
+      background: #e3f2fd;
+      border-color: #42a5f5;
+    }
+  }
+}
+
 .acoes-dono {
   display: flex;
   justify-content: flex-end;

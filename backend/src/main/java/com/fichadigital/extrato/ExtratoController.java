@@ -6,13 +6,18 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
@@ -136,6 +141,135 @@ public class ExtratoController {
         }).toList();
 
         return ResponseEntity.ok(new PageImpl<>(itens, pageable, total));
+    }
+
+    /**
+     * GET /clientes/{clienteId}/extrato/csv?mes=10&ano=2026
+     * Exporta o extrato completo (ou mensal) do cliente em formato CSV.
+     *
+     * Parâmetros opcionais:
+     *   mes  (1–12)  — filtra pelo mês
+     *   ano  (ex: 2026) — filtra pelo ano
+     *
+     * Sem parâmetros → exporta todo o histórico do cliente.
+     * farmaciaId do JWT (RNF03).
+     *
+     * @param clienteId UUID do cliente
+     * @param mes       Mês (1–12) — opcional
+     * @param ano       Ano (ex: 2026) — opcional
+     * @return Arquivo CSV para download
+     */
+    @GetMapping("/csv")
+    public ResponseEntity<byte[]> exportarCsv(
+            @PathVariable UUID clienteId,
+            @RequestParam(required = false) Integer mes,
+            @RequestParam(required = false) Integer ano) {
+
+        UUID farmaciaId = SecurityUtils.farmaciaId(); // RNF03
+
+        boolean filtrarPeriodo = mes != null && ano != null;
+
+        String filtroMes = filtrarPeriodo
+                ? "AND EXTRACT(MONTH FROM data) = :mes AND EXTRACT(YEAR FROM data) = :ano"
+                : "";
+
+        String sql = """
+                SELECT tipo, valor, descricao, data, nome_usuario, pessoa_retirou
+                  FROM (
+                         SELECT 'LANCAMENTO'      AS tipo,
+                                l.valor,
+                                l.descricao,
+                                l.data,
+                                u.nome            AS nome_usuario,
+                                l.pessoa_retirou
+                           FROM lancamento l
+                           JOIN cliente c ON c.id = l.cliente_id
+                           JOIN usuario u ON u.id = l.usuario_id
+                          WHERE c.id = :clienteId
+                            AND c.farmacia_id = :farmaciaId
+                          """ + filtroMes + """
+                         UNION ALL
+                         SELECT 'PAGAMENTO'       AS tipo,
+                                p.valor,
+                                NULL              AS descricao,
+                                p.data,
+                                u.nome            AS nome_usuario,
+                                NULL              AS pessoa_retirou
+                           FROM pagamento p
+                           JOIN cliente c ON c.id = p.cliente_id
+                           JOIN usuario u ON u.id = p.usuario_id
+                          WHERE c.id = :clienteId
+                            AND c.farmacia_id = :farmaciaId
+                          """ + filtroMes + """
+                       ) AS movimentacoes
+                 ORDER BY data DESC
+                """;
+
+        Query query = em.createNativeQuery(sql)
+                .setParameter("clienteId", clienteId)
+                .setParameter("farmaciaId", farmaciaId);
+
+        if (filtrarPeriodo) {
+            query.setParameter("mes", mes).setParameter("ano", ano);
+        }
+
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = query.getResultList();
+
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                .withZone(ZoneId.of("America/Sao_Paulo"));
+        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm")
+                .withZone(ZoneId.of("America/Sao_Paulo"));
+
+        StringBuilder csv = new StringBuilder();
+        // BOM UTF-8 para compatibilidade com Excel
+        csv.append('\uFEFF');
+        csv.append("Tipo,Data,Hora,Valor (R$),Descricao,Responsavel,Pessoa que Retirou\n");
+
+        for (Object[] r : rows) {
+            Instant data;
+            if (r[3] instanceof Instant i) {
+                data = i;
+            } else if (r[3] instanceof java.time.OffsetDateTime odt) {
+                data = odt.toInstant();
+            } else {
+                data = ((java.sql.Timestamp) r[3]).toInstant();
+            }
+
+            String tipo        = "LANCAMENTO".equals(r[0]) ? "Fiado" : "Pagamento";
+            String valor       = r[1] == null ? "0,00" : ((BigDecimal) r[1]).toPlainString().replace('.', ',');
+            String descricao   = csvField((String) r[2]);
+            String responsavel = csvField((String) r[4]);
+            String retirou     = csvField((String) r[5]);
+
+            csv.append(tipo).append(',')
+               .append(dateFmt.format(data)).append(',')
+               .append(timeFmt.format(data)).append(',')
+               .append(valor).append(',')
+               .append(descricao).append(',')
+               .append(responsavel).append(',')
+               .append(retirou).append('\n');
+        }
+
+        byte[] bytes = csv.toString().getBytes(StandardCharsets.UTF_8);
+
+        String periodo = filtrarPeriodo
+                ? String.format("%02d-%d", mes, ano)
+                : "completo";
+        String filename = "extrato-" + periodo + ".csv";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.parseMediaType("text/csv;charset=UTF-8"))
+                .contentLength(bytes.length)
+                .body(bytes);
+    }
+
+    /** Envolve o campo em aspas e escapa aspas internas (RFC 4180). */
+    private String csvField(String value) {
+        if (value == null || value.isBlank()) return "";
+        String escaped = value.replace("\"", "\"\"");
+        return "\"" + escaped + "\"";
     }
 
     public enum TipoMovimento { LANCAMENTO, PAGAMENTO }

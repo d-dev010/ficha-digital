@@ -13,6 +13,11 @@ import { Router } from '@angular/router';
 import { NovoFuncionarioDialogComponent } from './novo-funcionario-dialog.component';
 import { FuncionariosService, ResumoFarmacia } from './funcionarios.service';
 import { CurrencyBrPipe } from '../../shared/pipes/currency-br.pipe';
+import { RelatorioService } from '../../core/services/relatorio.service';
+import {
+  SelecionarMesDialogComponent,
+  SelecionarMesDialogResult,
+} from '../../shared/dialogs/selecionar-mes-dialog.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -21,6 +26,7 @@ import { CurrencyBrPipe } from '../../shared/pipes/currency-br.pipe';
     CommonModule, MatToolbarModule, MatIconModule, MatButtonModule,
     MatCardModule, MatDialogModule, MatSnackBarModule,
     MatProgressSpinnerModule, MatTooltipModule, CurrencyBrPipe,
+    SelecionarMesDialogComponent,
   ],
   template: `
     <mat-toolbar color="primary" class="toolbar">
@@ -100,6 +106,31 @@ import { CurrencyBrPipe } from '../../shared/pipes/currency-br.pipe';
         <div class="erro-box">
           <mat-icon>error_outline</mat-icon>
           <span>Não foi possível carregar os dados. Tente atualizar.</span>
+        </div>
+      }
+
+      @if (auth.perfil() === 'DONO') {
+        <!-- Card: Exportar Relatório -->
+        <div class="secao-relatorio">
+          <h3 class="secao-titulo">
+            <mat-icon class="secao-icone">summarize</mat-icon>
+            Exportar Relatório
+          </h3>
+          <p class="secao-desc">Gere um arquivo CSV com todas as movimentações de todos os clientes da farmácia.</p>
+          <div class="relatorio-botoes">
+            <button mat-flat-button color="primary" class="btn-relatorio"
+                    (click)="exportarCsvMes()" id="btn-relatorio-mes"
+                    matTooltip="Escolher mês e ano para exportar">
+              <mat-icon>calendar_month</mat-icon>
+              CSV do Mês
+            </button>
+            <button mat-stroked-button class="btn-relatorio btn-relatorio-total"
+                    (click)="exportarCsvTotal()" id="btn-relatorio-total"
+                    matTooltip="Exportar todo o histórico da farmácia">
+              <mat-icon>download</mat-icon>
+              CSV Total
+            </button>
+          </div>
         </div>
       }
 
@@ -251,6 +282,63 @@ import { CurrencyBrPipe } from '../../shared/pipes/currency-br.pipe';
       font-size: 14px;
     }
     .erro-box mat-icon { font-size: 20px; width: 20px; height: 20px; }
+
+    /* ─── Seção Exportar Relatório ─── */
+    .secao-relatorio {
+      margin-top: 24px;
+      background: linear-gradient(135deg, #e8eaf6 0%, #f3e5f5 100%);
+      border: 1.5px solid #9fa8da;
+      border-radius: 16px;
+      padding: 20px 20px 18px;
+    }
+
+    .secao-titulo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #283593;
+      margin: 0 0 6px;
+    }
+
+    .secao-icone {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: #3949ab;
+    }
+
+    .secao-desc {
+      font-size: 13px;
+      color: #616161;
+      margin: 0 0 16px;
+    }
+
+    .relatorio-botoes {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-relatorio {
+      flex: 1;
+      min-width: 140px;
+      height: 46px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 10px !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-relatorio-total {
+      color: #283593;
+      border-color: #9fa8da;
+      &:hover { background: #e8eaf6; }
+    }
   `]
 })
 export class DashboardComponent implements OnInit {
@@ -264,6 +352,7 @@ export class DashboardComponent implements OnInit {
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private funcionariosService: FuncionariosService,
+    private relatorioService: RelatorioService,
   ) { }
 
   ngOnInit() {
@@ -301,6 +390,35 @@ export class DashboardComponent implements OnInit {
       if (criado) {
         this.snackBar.open('Funcionário cadastrado com sucesso!', 'Fechar', { duration: 3000 });
       }
+    });
+  }
+
+  // ── Exportar CSV ─────────────────────────────────────────────────────────
+
+  exportarCsvMes() {
+    const ref = this.dialog.open(SelecionarMesDialogComponent, {
+      width: '92vw',
+      maxWidth: '360px',
+      data: { titulo: 'Exportar Relatório do Mês' },
+    });
+    ref.afterClosed().subscribe((result: SelecionarMesDialogResult | undefined) => {
+      if (!result) return;
+      this.relatorioService.csvGeral(result.mes, result.ano).subscribe({
+        next: (blob) => {
+          const filename = `relatorio-${String(result.mes).padStart(2, '0')}-${result.ano}.csv`;
+          this.relatorioService.download(blob, filename);
+        },
+        error: () =>
+          this.snackBar.open('Erro ao gerar CSV. Tente novamente.', 'Fechar', { duration: 3500 }),
+      });
+    });
+  }
+
+  exportarCsvTotal() {
+    this.relatorioService.csvGeral().subscribe({
+      next: (blob) => this.relatorioService.download(blob, 'relatorio-total.csv'),
+      error: () =>
+        this.snackBar.open('Erro ao gerar CSV. Tente novamente.', 'Fechar', { duration: 3500 }),
     });
   }
 }

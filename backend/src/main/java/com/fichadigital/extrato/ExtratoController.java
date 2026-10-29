@@ -16,6 +16,7 @@ import jakarta.persistence.Query;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -169,9 +170,18 @@ public class ExtratoController {
 
         boolean filtrarPeriodo = mes != null && ano != null;
 
-        String filtroMes = filtrarPeriodo
-                ? "AND EXTRACT(MONTH FROM data) = :mes AND EXTRACT(YEAR FROM data) = :ano"
-                : "";
+        Instant dataInicio = null;
+        Instant dataFim = null;
+        if (filtrarPeriodo) {
+            YearMonth ym = YearMonth.of(ano, mes);
+            ZoneId zone = ZoneId.of("America/Sao_Paulo");
+            dataInicio = ym.atDay(1).atStartOfDay(zone).toInstant();
+            dataFim = ym.plusMonths(1).atDay(1).atStartOfDay(zone).toInstant();
+        }
+
+        // Filtro sargável por data (data >= inicio AND data < fim) para permitir uso de índices
+        String filtroMesLanc = filtrarPeriodo ? "AND l.data >= :dataInicio AND l.data < :dataFim" : "";
+        String filtroMesPag  = filtrarPeriodo ? "AND p.data >= :dataInicio AND p.data < :dataFim" : "";
 
         String sql = """
                 SELECT tipo, valor, descricao, data, nome_usuario, pessoa_retirou
@@ -187,7 +197,7 @@ public class ExtratoController {
                            JOIN usuario u ON u.id = l.usuario_id
                           WHERE c.id = :clienteId
                             AND c.farmacia_id = :farmaciaId
-                          """ + filtroMes + """
+                          """ + filtroMesLanc + """
                          UNION ALL
                          SELECT 'PAGAMENTO'       AS tipo,
                                 p.valor,
@@ -200,17 +210,17 @@ public class ExtratoController {
                            JOIN usuario u ON u.id = p.usuario_id
                           WHERE c.id = :clienteId
                             AND c.farmacia_id = :farmaciaId
-                          """ + filtroMes + """
-                       ) AS movimentacoes
-                 ORDER BY data DESC
-                """;
+                          """ + filtroMesPag + """
+                        ) AS movimentacoes
+                  ORDER BY data DESC
+                 """;
 
         Query query = em.createNativeQuery(sql)
                 .setParameter("clienteId", clienteId)
                 .setParameter("farmaciaId", farmaciaId);
 
         if (filtrarPeriodo) {
-            query.setParameter("mes", mes).setParameter("ano", ano);
+            query.setParameter("dataInicio", dataInicio).setParameter("dataFim", dataFim);
         }
 
         @SuppressWarnings("unchecked")
@@ -251,7 +261,6 @@ public class ExtratoController {
                .append(responsavel).append(';')
                .append(retirou).append('\n');
         }
-
 
         byte[] bytes = csv.toString().getBytes(StandardCharsets.UTF_8);
 

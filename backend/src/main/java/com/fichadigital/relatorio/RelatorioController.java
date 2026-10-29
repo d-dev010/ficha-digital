@@ -13,6 +13,7 @@ import jakarta.persistence.Query;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -64,9 +65,18 @@ public class RelatorioController {
 
         boolean filtrarPeriodo = mes != null && ano != null;
 
-        String filtroMes = filtrarPeriodo
-                ? "AND EXTRACT(MONTH FROM data) = :mes AND EXTRACT(YEAR FROM data) = :ano"
-                : "";
+        Instant dataInicio = null;
+        Instant dataFim = null;
+        if (filtrarPeriodo) {
+            YearMonth ym = YearMonth.of(ano, mes);
+            ZoneId zone = ZoneId.of("America/Sao_Paulo");
+            dataInicio = ym.atDay(1).atStartOfDay(zone).toInstant();
+            dataFim = ym.plusMonths(1).atDay(1).atStartOfDay(zone).toInstant();
+        }
+
+        // Filtro sargável por data (data >= inicio AND data < fim) para permitir uso de índices
+        String filtroMesLanc = filtrarPeriodo ? "AND l.data >= :dataInicio AND l.data < :dataFim" : "";
+        String filtroMesPag  = filtrarPeriodo ? "AND p.data >= :dataInicio AND p.data < :dataFim" : "";
 
         String sql = """
                 SELECT cliente,
@@ -88,7 +98,7 @@ public class RelatorioController {
                            JOIN cliente c  ON c.id = l.cliente_id
                            JOIN usuario u  ON u.id = l.usuario_id
                           WHERE c.farmacia_id = :farmaciaId
-                          """ + filtroMes + """
+                          """ + filtroMesLanc + """
                          UNION ALL
                          SELECT c.nome          AS cliente,
                                 'PAGAMENTO'     AS tipo,
@@ -101,17 +111,16 @@ public class RelatorioController {
                            JOIN cliente c  ON c.id = p.cliente_id
                            JOIN usuario u  ON u.id = p.usuario_id
                           WHERE c.farmacia_id = :farmaciaId
-                          """ + filtroMes + """
-                       ) AS mov
-                 ORDER BY data DESC
-                """;
-
+                          """ + filtroMesPag + """
+                        ) AS mov
+                  ORDER BY data DESC
+                 """;
 
         Query query = em.createNativeQuery(sql)
                 .setParameter("farmaciaId", farmaciaId);
 
         if (filtrarPeriodo) {
-            query.setParameter("mes", mes).setParameter("ano", ano);
+            query.setParameter("dataInicio", dataInicio).setParameter("dataFim", dataFim);
         }
 
         @SuppressWarnings("unchecked")

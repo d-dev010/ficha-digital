@@ -16,9 +16,13 @@ function fn() {
 
   if (env == 'prd') {
     // Apontado para a API no Render via secrets do GitHub
-    config.apiUrl = java.lang.System.getenv('KARATE_API_URL') || 'https://sua-api.onrender.com';
-    config.adminEmail = java.lang.System.getenv('KARATE_ADMIN_EMAIL') || '';
-    config.adminPassword = java.lang.System.getenv('KARATE_ADMIN_PASSWORD') || '';
+    var karateApiUrl = java.lang.System.getenv('KARATE_API_URL');
+    var karateAdminEmail = java.lang.System.getenv('KARATE_ADMIN_EMAIL');
+    var karateAdminPassword = java.lang.System.getenv('KARATE_ADMIN_PASSWORD');
+
+    config.apiUrl = karateApiUrl ? karateApiUrl : 'https://sua-api.onrender.com';
+    config.adminEmail = karateAdminEmail ? karateAdminEmail : '';
+    config.adminPassword = karateAdminPassword ? karateAdminPassword : '';
   }
 
   // Timeout maior para ambientes lentos (Render "acorda" o serviço)

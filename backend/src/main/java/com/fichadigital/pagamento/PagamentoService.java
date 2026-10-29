@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Service de pagamentos.
@@ -24,7 +25,7 @@ import java.util.UUID;
  *  - Optimistic Locking via @Version na entidade Cliente (Problema 3 — Performance):
  *    substitui o lock pessimista (SELECT FOR UPDATE), eliminando o bloqueio de linha no banco.
  *    Em caso de escrita concorrente, ObjectOptimisticLockingFailureException é capturada
- *    e a operação é repetida até MAX_RETRIES vezes.
+ *    e a operação é repetida até MAX_RETRIES vezes com backoff aleatório.
  *  - farmaciaId sempre vem do JWT/SecurityContext — NUNCA do body (RNF03)
  *  - Saldo não pode ficar negativo (proteção contra input inválido)
  */
@@ -47,7 +48,7 @@ public class PagamentoService {
      * Registra um pagamento (total ou parcial) para o cliente (US07).
      *
      * Confirmo entendimento do RNF03: farmaciaId é extraído do Authentication no controller.
-     * Usa retry para lidar com ObjectOptimisticLockingFailureException (Problema 3).
+     * Usa retry com backoff exponencial aleatório para lidar com concorrência (Problema 3).
      *
      * @param farmaciaId UUID da farmácia — extraído do JWT (RNF03)
      * @param usuarioId  UUID do usuário autenticado — do SecurityContext
@@ -56,11 +57,12 @@ public class PagamentoService {
      * @return Pagamento persistido
      */
     public Pagamento registrar(UUID farmaciaId, UUID usuarioId, UUID clienteId, BigDecimal valor) {
+        PagamentoService target = self != null ? self : this;
         int tentativas = 0;
         while (true) {
             try {
-                // Problema C2: Chama via 'self' para ativar o @Transactional
-                return self.tentarRegistrar(farmaciaId, usuarioId, clienteId, valor);
+                // Problema C2: Chama via 'target' (self para ativar o @Transactional)
+                return target.tentarRegistrar(farmaciaId, usuarioId, clienteId, valor);
             } catch (ObjectOptimisticLockingFailureException e) {
                 tentativas++;
                 if (tentativas >= MAX_RETRIES) {
@@ -68,8 +70,14 @@ public class PagamentoService {
                             MAX_RETRIES, clienteId);
                     throw e;
                 }
-                log.warn("Conflito de escrita concorrente ao registrar pagamento (tentativa {}/{}), reexecutando...",
+                log.warn("Conflito de escrita concorrente ao registrar pagamento (tentativa {}/{}), aguardando retry...",
                         tentativas, MAX_RETRIES);
+                try {
+                    Thread.sleep(25L * tentativas + ThreadLocalRandom.current().nextInt(25));
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw e;
+                }
             }
         }
     }

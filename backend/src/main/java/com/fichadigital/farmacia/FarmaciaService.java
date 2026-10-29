@@ -60,14 +60,13 @@ public class FarmaciaService {
     /**
      * Agrega métricas do painel administrativo do DONO (US — painel adm).
      * Retorna: clientes com saldo devedor > 0 e soma total dos saldos devedores.
+     * Executa em uma única consulta agregada no banco de dados.
      *
      * @param farmaciaId UUID da farmácia — extraído do JWT (RNF03)
      * @return ResumoFarmaciaResponse com clientesAtivos e totalAReceber
      */
     @Transactional(readOnly = true)
     public ResumoFarmaciaResponse resumo(UUID farmaciaId) {
-        long clientesAtivos = clienteRepository.contarClientesAtivos(farmaciaId);
-        java.math.BigDecimal totalAReceber = clienteRepository.somarSaldoDevedor(farmaciaId);
-        return new ResumoFarmaciaResponse(clientesAtivos, totalAReceber);
+        return clienteRepository.obterResumo(farmaciaId);
     }
 }

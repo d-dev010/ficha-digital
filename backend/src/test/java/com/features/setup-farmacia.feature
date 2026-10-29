@@ -27,5 +27,6 @@ Feature: Setup de Farmácia para Testes
     When method post
     Then status 200
 
-    # Retorna o token para quem chamou este feature
+    # Expõe o token como propriedade do objeto retornado pelo callonce
+    # No clientes.feature: def setup = callonce read(...) => setup.token
     * def token = response.token

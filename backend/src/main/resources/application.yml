@@ -5,6 +5,8 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
+      maximum-pool-size: ${HIKARI_MAX_POOL_SIZE:10}
+      minimum-idle: ${HIKARI_MIN_IDLE:2}
       connection-timeout: 10000        # falha em 10s em vez de travar 14 min
       initialization-fail-timeout: 15000
       # Neon (PgBouncer pooler) requer sslmode=require e prepareThreshold=0
@@ -14,11 +16,12 @@ spring:
         sslmode: ${SPRING_DATASOURCE_SSLMODE:disable}
         prepareThreshold: 0
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
-        format_sql: true
+        format_sql: ${HIBERNATE_FORMAT_SQL:false}
         dialect: org.hibernate.dialect.PostgreSQLDialect
   flyway:
     enabled: true
@@ -45,4 +48,3 @@ springdoc:
     enabled: ${SPRINGDOC_ENABLED:true}
   swagger-ui:
     enabled: ${SPRINGDOC_ENABLED:true}
-

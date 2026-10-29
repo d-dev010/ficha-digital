@@ -2,7 +2,7 @@ package com.features;
 
 import com.intuit.karate.junit5.Karate;
 
-class KarateTest {
+public class KarateTest {
 
     @Karate.Test
     Karate testAll() {
@@ -12,4 +12,3 @@ class KarateTest {
         return Karate.run("clientes").relativeTo(getClass());
     }
 }
-

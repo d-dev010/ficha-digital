@@ -1,10 +1,13 @@
 package com.fichadigital.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fichadigital.security.JwtService;
 import com.fichadigital.usuario.Perfil;
+import com.fichadigital.usuario.UsuarioRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -24,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Usa @WebMvcTest para testar apenas a camada HTTP sem subir contexto completo.
  */
 @WebMvcTest(AuthController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 class AuthControllerTest {
 
@@ -35,6 +39,12 @@ class AuthControllerTest {
 
     @MockBean
     private AuthService authService;
+
+    @MockBean
+    private JwtService jwtService;
+
+    @MockBean
+    private UsuarioRepository usuarioRepository;
 
     @Test
     @DisplayName("POST /auth/login deve retornar 400 quando body está vazio")
@@ -59,8 +69,10 @@ class AuthControllerTest {
     @Test
     @DisplayName("POST /auth/login deve retornar 401 quando credenciais são inválidas")
     void deveRetornar401ParaCredenciaisInvalidas() throws Exception {
-        LoginRequest request = new LoginRequest("usuario@farmacia.com", "senhaErrada");
-        when(authService.autenticar(any())).thenThrow(new BadCredentialsException("Credenciais inválidas"));
+        when(authService.autenticar(any(LoginRequest.class)))
+                .thenThrow(new BadCredentialsException("E-mail ou senha inválidos"));
+
+        LoginRequest request = new LoginRequest("usuario@teste.com", "senha-errada");
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -69,23 +81,30 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("POST /auth/login deve retornar 200 com token quando credenciais são válidas")
-    void deveRetornar200ComTokenParaCredenciaisValidas() throws Exception {
-        LoginRequest request = new LoginRequest("dono@farmacia.com", "senha123");
-        TokenResponse tokenResponse = new TokenResponse(
-                "jwt.token.aqui",
-                UUID.randomUUID(),
-                "Dono da Farmácia",
+    @DisplayName("POST /auth/login deve retornar 200 com TokenResponse quando sucesso")
+    void deveRetornar200ComTokenResponseNoLoginComSucesso() throws Exception {
+        UUID farmaciaId = UUID.randomUUID();
+        UUID usuarioId = UUID.randomUUID();
+        TokenResponse responseEsperada = new TokenResponse(
+                "token-jwt-mock",
+                usuarioId,
+                "Dono Teste",
                 Perfil.DONO,
-                UUID.randomUUID()
+                farmaciaId
         );
-        when(authService.autenticar(any())).thenReturn(tokenResponse);
+
+        when(authService.autenticar(any(LoginRequest.class))).thenReturn(responseEsperada);
+
+        LoginRequest request = new LoginRequest("dono@teste.com", "SenhaForte123!");
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("jwt.token.aqui"))
-                .andExpect(jsonPath("$.perfil").value("DONO"));
+                .andExpect(jsonPath("$.token").value("token-jwt-mock"))
+                .andExpect(jsonPath("$.usuarioId").value(usuarioId.toString()))
+                .andExpect(jsonPath("$.nome").value("Dono Teste"))
+                .andExpect(jsonPath("$.perfil").value("DONO"))
+                .andExpect(jsonPath("$.farmaciaId").value(farmaciaId.toString()));
     }
 }

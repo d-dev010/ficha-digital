@@ -57,17 +57,25 @@ public class ClienteService {
 
     /**
      * Busca paginada de clientes por nome (parcial), telefone ou CPF — US04 (Problema 2 — Performance).
-     * CPF mascarado no resultado (RNF04). Ordenação definida pelo Pageable (ex: nome ASC).
+     * CPF mascarado no resultado (RNF04).
+     * 
+     * Otimização de performance:
+     * - Quando 'termo' for nulo ou em branco (listagem inicial padrão da tela), executa a rota rápida
+     *   via índice composto (farmacia_id, anonimizado, nome), sem o custo de unaccent, LIKEs ou CASEs.
+     * - Quando 'termo' for informado, executa a busca flexível por nome/telefone/CPF.
      *
      * @param farmaciaId UUID da farmácia — extraído do JWT (RNF03)
-     * @param termo      Termo de busca
+     * @param termo      Termo de busca (opcional)
      * @param pageable   Configuração de página e ordenação
      * @return Página de ClienteResumo com CPF mascarado
      */
     @Transactional(readOnly = true)
     public Page<ClienteResumo> buscar(UUID farmaciaId, String termo, Pageable pageable) {
-        return clienteRepository.buscar(farmaciaId, termo, pageable)
-                .map(c -> ClienteResumo.from(c, mascarar(c.getCpf())));
+        Page<Cliente> pagina = (termo == null || termo.isBlank())
+                ? clienteRepository.findByFarmaciaIdAndAnonimizadoFalseOrderByNomeAsc(farmaciaId, pageable)
+                : clienteRepository.buscar(farmaciaId, termo.trim(), pageable);
+
+        return pagina.map(c -> ClienteResumo.from(c, mascarar(c.getCpf())));
     }
 
     /**

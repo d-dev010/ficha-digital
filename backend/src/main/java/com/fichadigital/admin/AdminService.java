@@ -33,14 +33,7 @@ public class AdminService {
 
     @Transactional(readOnly = true)
     public List<AdminDtos.FarmaciaAdminResponse> listarFarmacias() {
-        return farmaciaRepository.findAll().stream()
-                .map(f -> new AdminDtos.FarmaciaAdminResponse(
-                        f.getId(),
-                        f.getNome(),
-                        f.getCnpj(),
-                        usuarioRepository.countByFarmaciaId(f.getId())
-                ))
-                .toList();
+        return farmaciaRepository.findAllWithUserCount();
     }
 
     @Transactional

@@ -18,7 +18,7 @@ Feature: API de Clientes da Ficha Digital
     When method get
     Then status 200
     # A farmácia acabou de ser criada, a lista deve ser vazia
-    And match response.content == '#[]'
+    And match response.content == []
 
   Scenario: Cadastrar um novo cliente com sucesso
     Given path 'clientes'

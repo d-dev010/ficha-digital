@@ -1,5 +1,6 @@
 package com.fichadigital.cliente;
 
+import com.fichadigital.farmacia.ResumoFarmaciaResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,7 +16,7 @@ import java.util.UUID;
  *
  * Multi-tenant: todos os métodos recebem farmaciaId extraído do JWT — nunca do request body (RNF03).
  * Busca combinada por nome/telefone/CPF para US04.
- * Lock pessimista em findByIdForUpdate para atualização segura do saldo_devedor (RNF10).
+ * Optimistic Locking (@Version) para atualização segura do saldo_devedor (RNF10).
  */
 @Repository
 public interface ClienteRepository extends JpaRepository<Cliente, UUID> {
@@ -26,16 +27,15 @@ public interface ClienteRepository extends JpaRepository<Cliente, UUID> {
     boolean existsByIdAndFarmaciaId(UUID id, UUID farmaciaId);
 
     /**
+     * Listagem paginada padrão (quando nenhum termo de busca é informado).
+     * Utiliza diretamente o índice composto (farmacia_id, anonimizado, nome)
+     * sem o custo de unaccent, LIKE ou funções em runtime.
+     */
+    Page<Cliente> findByFarmaciaIdAndAnonimizadoFalseOrderByNomeAsc(UUID farmaciaId, Pageable pageable);
+
+    /**
      * Busca paginada por nome (parcial, case-insensitive, sem acento), telefone ou CPF — US04.
      * Filtrada por farmaciaId — RNF03.
-     *
-     * Melhorias em relação à versão anterior:
-     *  1. unaccent(): "e" encontra "é", "a" encontra "ã", "c" encontra "ç", etc.
-     *  2. ORDER BY de relevância:
-     *       - prioridade 1: nome começa com o termo (starts-with)
-     *       - prioridade 2: nome contém o termo em outra posição
-     *       - prioridade 3: match apenas por telefone/CPF
-     *     Dentro de cada nível, ordena alfabeticamente por nome.
      */
     @Query(value = """
             SELECT c.* FROM cliente c
@@ -55,7 +55,7 @@ public interface ClienteRepository extends JpaRepository<Cliente, UUID> {
               c.nome ASC
             """,
             countQuery = """
-            SELECT count(c.*) FROM cliente c
+            SELECT count(1) FROM cliente c
             WHERE c.farmacia_id = :farmaciaId
               AND c.anonimizado = false
               AND (
@@ -75,15 +75,29 @@ public interface ClienteRepository extends JpaRepository<Cliente, UUID> {
     Optional<Cliente> findByIdAndFarmaciaId(@Param("id") UUID id, @Param("farmaciaId") UUID farmaciaId);
 
     /**
+     * Agrega métricas do painel do DONO (clientes ativos e total a receber) em uma ÚNICA consulta no banco,
+     * eliminando scans duplicados.
+     */
+    @Query("""
+        SELECT new com.fichadigital.farmacia.ResumoFarmaciaResponse(
+            COUNT(CASE WHEN c.saldoDevedor > 0 THEN 1 END),
+            COALESCE(SUM(c.saldoDevedor), 0)
+        )
+        FROM Cliente c
+        WHERE c.farmacia.id = :farmaciaId AND c.anonimizado = false
+    """)
+    ResumoFarmaciaResponse obterResumo(@Param("farmaciaId") UUID farmaciaId);
+
+    /**
      * Conta clientes com saldo devedor > 0 (clientes ativos) para o painel do DONO.
-     * Filtrado por farmácia — RNF03.
+     * Mantido por compatibilidade.
      */
     @Query("SELECT COUNT(c) FROM Cliente c WHERE c.farmacia.id = :farmaciaId AND c.saldoDevedor > 0")
     long contarClientesAtivos(@Param("farmaciaId") UUID farmaciaId);
 
     /**
      * Soma o saldo devedor total de todos os clientes da farmácia (total a receber).
-     * Retorna 0 se não houver clientes. Filtrado por farmácia — RNF03.
+     * Retorna 0 se não houver clientes. Mantido por compatibilidade.
      */
     @Query("SELECT COALESCE(SUM(c.saldoDevedor), 0) FROM Cliente c WHERE c.farmacia.id = :farmaciaId")
     java.math.BigDecimal somarSaldoDevedor(@Param("farmaciaId") UUID farmaciaId);

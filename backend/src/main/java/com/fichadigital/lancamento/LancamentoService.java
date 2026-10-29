@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Service de lançamentos de fiado.
@@ -24,7 +25,7 @@ import java.util.UUID;
  *  - Optimistic Locking via @Version na entidade Cliente (Problema 3 — Performance):
  *    substitui o lock pessimista (SELECT FOR UPDATE), eliminando o bloqueio de linha no banco.
  *    Em caso de escrita concorrente, ObjectOptimisticLockingFailureException é capturada
- *    e a operação é repetida até MAX_RETRIES vezes.
+ *    e a operação é repetida até MAX_RETRIES vezes com backoff aleatório.
  *  - farmaciaId sempre vem do JWT/SecurityContext — NUNCA do body (RNF03)
  *  - A validação de que o cliente pertence à farmácia do usuário autenticado é OBRIGATÓRIA (RNF03)
  */
@@ -50,7 +51,7 @@ public class LancamentoService {
      * e passado para este service. A query findByIdAndFarmaciaId verifica que o cliente pertence
      * à mesma farmácia ANTES de qualquer escrita.
      *
-     * Usa retry para lidar com ObjectOptimisticLockingFailureException (Problema 3).
+     * Usa retry com backoff exponencial aleatório para mitigar livelock (Problema 3).
      *
      * @param farmaciaId UUID da farmácia — extraído do JWT (RNF03)
      * @param usuarioId  UUID do usuário autenticado — do SecurityContext
@@ -61,11 +62,12 @@ public class LancamentoService {
      */
     public Lancamento lancar(UUID farmaciaId, UUID usuarioId, UUID clienteId,
                              BigDecimal valor, String descricao, String pessoaRetirou) {
+        LancamentoService target = self != null ? self : this;
         int tentativas = 0;
         while (true) {
             try {
-                // Problema C2: Chama via 'self' para passar pelo proxy do Spring e ativar o @Transactional
-                return self.tentarLancar(farmaciaId, usuarioId, clienteId, valor, descricao, pessoaRetirou);
+                // Problema C2: Chama via 'target' (self para passar pelo proxy do Spring e ativar o @Transactional)
+                return target.tentarLancar(farmaciaId, usuarioId, clienteId, valor, descricao, pessoaRetirou);
             } catch (ObjectOptimisticLockingFailureException e) {
                 tentativas++;
                 if (tentativas >= MAX_RETRIES) {
@@ -73,8 +75,14 @@ public class LancamentoService {
                             MAX_RETRIES, clienteId);
                     throw e;
                 }
-                log.warn("Conflito de escrita concorrente ao lançar fiado (tentativa {}/{}), reexecutando...",
+                log.warn("Conflito de escrita concorrente ao lançar fiado (tentativa {}/{}), aguardando retry...",
                         tentativas, MAX_RETRIES);
+                try {
+                    Thread.sleep(25L * tentativas + ThreadLocalRandom.current().nextInt(25));
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw e;
+                }
             }
         }
     }
